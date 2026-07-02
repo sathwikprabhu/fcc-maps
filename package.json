@@ -1,0 +1,18 @@
+{
+  "name": "leaflet-map-generator-root",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "install:all": "npm install && npm install --prefix server && npm install --prefix admin",
+    "dev:server": "npm run dev --prefix server",
+    "dev:admin": "npm run dev --prefix admin",
+    "dev": "concurrently --kill-others \"npm run dev:server\" \"npm run dev:admin\"",
+    "build:server": "npm run build --prefix server",
+    "build:admin": "npm run build --prefix admin",
+    "build": "npm run build:server && npm run build:admin",
+    "start": "npm run start --prefix server"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

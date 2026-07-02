@@ -1,0 +1,929 @@
+[
+  {
+    "timestamp": "2026-07-02T09:20:27.955Z",
+    "level": "info",
+    "message": "Scheduler service started"
+  },
+  {
+    "timestamp": "2026-07-02T09:20:27.953Z",
+    "level": "info",
+    "message": "Web server started on port 5050"
+  },
+  {
+    "timestamp": "2026-07-02T09:20:27.725Z",
+    "level": "info",
+    "message": "Scheduler service stopped"
+  },
+  {
+    "timestamp": "2026-07-02T09:11:53.906Z",
+    "level": "info",
+    "message": "Scheduler service stopped"
+  },
+  {
+    "timestamp": "2026-07-02T09:11:53.904Z",
+    "level": "info",
+    "message": "Rescheduling sync job due to settings change"
+  },
+  {
+    "timestamp": "2026-07-02T09:10:38.090Z",
+    "level": "info",
+    "message": "Scheduler service started"
+  },
+  {
+    "timestamp": "2026-07-02T09:10:38.089Z",
+    "level": "info",
+    "message": "Web server started on port 5050"
+  },
+  {
+    "timestamp": "2026-07-02T09:10:37.715Z",
+    "level": "info",
+    "message": "Scheduler service stopped"
+  },
+  {
+    "timestamp": "2026-07-02T09:09:35.090Z",
+    "level": "info",
+    "message": "Sync completed successfully"
+  },
+  {
+    "timestamp": "2026-07-02T09:09:35.089Z",
+    "level": "info",
+    "message": "Successfully regenerated markers.json with 6 markers (1.49 KB)"
+  },
+  {
+    "timestamp": "2026-07-02T09:09:34.834Z",
+    "level": "info",
+    "message": "Starting synchronization (Manual)",
+    "details": "API URL: https://fcc-ped-sathwik-test.web.cern.ch/wp-json/wp/v2/posts"
+  },
+  {
+    "timestamp": "2026-07-02T09:09:25.131Z",
+    "level": "info",
+    "message": "Sync completed successfully"
+  },
+  {
+    "timestamp": "2026-07-02T09:09:25.129Z",
+    "level": "info",
+    "message": "Successfully regenerated markers.json with 6 markers (1.49 KB)"
+  },
+  {
+    "timestamp": "2026-07-02T09:09:24.745Z",
+    "level": "info",
+    "message": "Starting synchronization (Manual)",
+    "details": "API URL: https://fcc-ped-sathwik-test.web.cern.ch/wp-json/wp/v2/posts"
+  },
+  {
+    "timestamp": "2026-07-02T09:09:19.810Z",
+    "level": "info",
+    "message": "Sync completed successfully"
+  },
+  {
+    "timestamp": "2026-07-02T09:09:19.809Z",
+    "level": "info",
+    "message": "Successfully regenerated markers.json with 6 markers (1.49 KB)"
+  },
+  {
+    "timestamp": "2026-07-02T09:09:19.565Z",
+    "level": "info",
+    "message": "Starting synchronization (Manual)",
+    "details": "API URL: https://fcc-ped-sathwik-test.web.cern.ch/wp-json/wp/v2/posts"
+  },
+  {
+    "timestamp": "2026-07-02T09:09:17.962Z",
+    "level": "info",
+    "message": "Sync completed successfully"
+  },
+  {
+    "timestamp": "2026-07-02T09:09:17.961Z",
+    "level": "info",
+    "message": "Successfully regenerated markers.json with 6 markers (1.49 KB)"
+  },
+  {
+    "timestamp": "2026-07-02T09:09:17.681Z",
+    "level": "info",
+    "message": "Starting synchronization (Manual)",
+    "details": "API URL: https://fcc-ped-sathwik-test.web.cern.ch/wp-json/wp/v2/posts"
+  },
+  {
+    "timestamp": "2026-07-02T09:04:45.851Z",
+    "level": "info",
+    "message": "Sync completed successfully"
+  },
+  {
+    "timestamp": "2026-07-02T09:04:45.850Z",
+    "level": "info",
+    "message": "Successfully regenerated markers.json with 6 markers (1.49 KB)"
+  },
+  {
+    "timestamp": "2026-07-02T09:04:45.485Z",
+    "level": "info",
+    "message": "Starting synchronization (Manual)",
+    "details": "API URL: https://fcc-ped-sathwik-test.web.cern.ch/wp-json/wp/v2/posts"
+  },
+  {
+    "timestamp": "2026-07-02T09:03:48.449Z",
+    "level": "info",
+    "message": "Sync completed successfully"
+  },
+  {
+    "timestamp": "2026-07-02T09:03:48.448Z",
+    "level": "info",
+    "message": "Successfully regenerated markers.json with 6 markers (1.49 KB)"
+  },
+  {
+    "timestamp": "2026-07-02T09:03:48.119Z",
+    "level": "info",
+    "message": "Starting synchronization (Manual)",
+    "details": "API URL: https://fcc-ped-sathwik-test.web.cern.ch/wp-json/wp/v2/posts"
+  },
+  {
+    "timestamp": "2026-07-02T09:01:14.424Z",
+    "level": "info",
+    "message": "Sync completed successfully"
+  },
+  {
+    "timestamp": "2026-07-02T09:01:14.423Z",
+    "level": "info",
+    "message": "Successfully regenerated markers.json with 6 markers (1.49 KB)"
+  },
+  {
+    "timestamp": "2026-07-02T09:01:14.106Z",
+    "level": "info",
+    "message": "Starting synchronization (Manual)",
+    "details": "API URL: https://fcc-ped-sathwik-test.web.cern.ch/wp-json/wp/v2/posts"
+  },
+  {
+    "timestamp": "2026-07-02T08:57:56.384Z",
+    "level": "info",
+    "message": "Sync completed successfully"
+  },
+  {
+    "timestamp": "2026-07-02T08:57:56.383Z",
+    "level": "info",
+    "message": "Successfully regenerated markers.json with 6 markers (1.54 KB)"
+  },
+  {
+    "timestamp": "2026-07-02T08:57:56.053Z",
+    "level": "info",
+    "message": "Starting synchronization (Manual)",
+    "details": "API URL: https://fcc-ped-sathwik-test.web.cern.ch/wp-json/wp/v2/posts"
+  },
+  {
+    "timestamp": "2026-07-02T08:56:11.441Z",
+    "level": "info",
+    "message": "Sync completed successfully"
+  },
+  {
+    "timestamp": "2026-07-02T08:56:11.440Z",
+    "level": "info",
+    "message": "Successfully regenerated markers.json with 6 markers (1.54 KB)"
+  },
+  {
+    "timestamp": "2026-07-02T08:56:11.044Z",
+    "level": "info",
+    "message": "Starting synchronization (Manual)",
+    "details": "API URL: https://fcc-ped-sathwik-test.web.cern.ch/wp-json/wp/v2/posts"
+  },
+  {
+    "timestamp": "2026-07-02T08:56:05.102Z",
+    "level": "info",
+    "message": "Scheduler service started"
+  },
+  {
+    "timestamp": "2026-07-02T08:56:05.101Z",
+    "level": "info",
+    "message": "Web server started on port 5050"
+  },
+  {
+    "timestamp": "2026-07-02T08:56:04.989Z",
+    "level": "info",
+    "message": "Scheduler service stopped"
+  },
+  {
+    "timestamp": "2026-07-02T07:47:10.888Z",
+    "level": "info",
+    "message": "Scheduler service started"
+  },
+  {
+    "timestamp": "2026-07-02T07:47:10.887Z",
+    "level": "info",
+    "message": "Web server started on port 5050"
+  },
+  {
+    "timestamp": "2026-07-01T23:37:28.853Z",
+    "level": "info",
+    "message": "Scheduler service stopped"
+  },
+  {
+    "timestamp": "2026-07-01T15:30:41.121Z",
+    "level": "info",
+    "message": "Sync completed successfully"
+  },
+  {
+    "timestamp": "2026-07-01T15:30:41.121Z",
+    "level": "info",
+    "message": "Successfully regenerated markers.json with 6 markers (1.58 KB)"
+  },
+  {
+    "timestamp": "2026-07-01T15:30:40.481Z",
+    "level": "info",
+    "message": "Starting synchronization (Manual)",
+    "details": "API URL: https://fcc-ped-sathwik-test.web.cern.ch/wp-json/wp/v2/posts"
+  },
+  {
+    "timestamp": "2026-07-01T15:27:57.688Z",
+    "level": "info",
+    "message": "Scheduler service stopped"
+  },
+  {
+    "timestamp": "2026-07-01T15:27:57.687Z",
+    "level": "info",
+    "message": "Rescheduling sync job due to settings change"
+  },
+  {
+    "timestamp": "2026-07-01T15:20:55.482Z",
+    "level": "info",
+    "message": "Scheduler service started"
+  },
+  {
+    "timestamp": "2026-07-01T15:20:55.480Z",
+    "level": "info",
+    "message": "Web server started on port 5050"
+  },
+  {
+    "timestamp": "2026-07-01T15:20:52.845Z",
+    "level": "info",
+    "message": "Scheduler service stopped"
+  },
+  {
+    "timestamp": "2026-07-01T15:08:49.992Z",
+    "level": "info",
+    "message": "Sync completed successfully"
+  },
+  {
+    "timestamp": "2026-07-01T15:08:49.989Z",
+    "level": "info",
+    "message": "Successfully regenerated markers.json with 6 markers (1.58 KB)"
+  },
+  {
+    "timestamp": "2026-07-01T15:08:49.495Z",
+    "level": "info",
+    "message": "Starting synchronization (Manual)",
+    "details": "API URL: https://fcc-ped-sathwik-test.web.cern.ch/wp-json/wp/v2/posts"
+  },
+  {
+    "timestamp": "2026-07-01T15:04:01.652Z",
+    "level": "info",
+    "message": "Scheduler service started"
+  },
+  {
+    "timestamp": "2026-07-01T15:04:01.651Z",
+    "level": "info",
+    "message": "Web server started on port 5050"
+  },
+  {
+    "timestamp": "2026-07-01T15:04:01.309Z",
+    "level": "info",
+    "message": "Scheduler service stopped"
+  },
+  {
+    "timestamp": "2026-07-01T15:01:57.625Z",
+    "level": "info",
+    "message": "Scheduler service started"
+  },
+  {
+    "timestamp": "2026-07-01T15:01:57.623Z",
+    "level": "info",
+    "message": "Web server started on port 5050"
+  },
+  {
+    "timestamp": "2026-07-01T15:01:57.385Z",
+    "level": "info",
+    "message": "Scheduler service stopped"
+  },
+  {
+    "timestamp": "2026-07-01T15:00:53.146Z",
+    "level": "info",
+    "message": "Scheduler service started"
+  },
+  {
+    "timestamp": "2026-07-01T15:00:53.143Z",
+    "level": "info",
+    "message": "Web server started on port 5050"
+  },
+  {
+    "timestamp": "2026-07-01T14:59:00.920Z",
+    "level": "info",
+    "message": "Sync completed successfully"
+  },
+  {
+    "timestamp": "2026-07-01T14:59:00.916Z",
+    "level": "info",
+    "message": "Successfully regenerated markers.json with 6 markers (1.58 KB)"
+  },
+  {
+    "timestamp": "2026-07-01T14:59:00.555Z",
+    "level": "info",
+    "message": "Starting synchronization (Manual)",
+    "details": "API URL: https://fcc-ped-sathwik-test.web.cern.ch/wp-json/wp/v2/posts"
+  },
+  {
+    "timestamp": "2026-07-01T14:58:08.539Z",
+    "level": "info",
+    "message": "Sync completed successfully"
+  },
+  {
+    "timestamp": "2026-07-01T14:58:08.538Z",
+    "level": "info",
+    "message": "Successfully regenerated markers.json with 6 markers (1.58 KB)"
+  },
+  {
+    "timestamp": "2026-07-01T14:58:08.084Z",
+    "level": "info",
+    "message": "Starting synchronization (Manual)",
+    "details": "API URL: https://fcc-ped-sathwik-test.web.cern.ch/wp-json/wp/v2/posts"
+  },
+  {
+    "timestamp": "2026-07-01T14:33:19.781Z",
+    "level": "info",
+    "message": "Sync completed successfully"
+  },
+  {
+    "timestamp": "2026-07-01T14:33:19.778Z",
+    "level": "info",
+    "message": "Successfully regenerated markers.json with 6 markers (1.58 KB)"
+  },
+  {
+    "timestamp": "2026-07-01T14:33:19.435Z",
+    "level": "info",
+    "message": "Starting synchronization (Manual)",
+    "details": "API URL: https://fcc-ped-sathwik-test.web.cern.ch/wp-json/wp/v2/posts"
+  },
+  {
+    "timestamp": "2026-07-01T14:33:01.739Z",
+    "level": "info",
+    "message": "Sync completed successfully"
+  },
+  {
+    "timestamp": "2026-07-01T14:33:01.739Z",
+    "level": "info",
+    "message": "Successfully regenerated markers.json with 5 markers (1.32 KB)"
+  },
+  {
+    "timestamp": "2026-07-01T14:33:01.295Z",
+    "level": "info",
+    "message": "Starting synchronization (Manual)",
+    "details": "API URL: https://fcc-ped-sathwik-test.web.cern.ch/wp-json/wp/v2/posts"
+  },
+  {
+    "timestamp": "2026-07-01T14:32:59.397Z",
+    "level": "info",
+    "message": "Sync completed successfully"
+  },
+  {
+    "timestamp": "2026-07-01T14:32:59.396Z",
+    "level": "info",
+    "message": "Successfully regenerated markers.json with 5 markers (1.32 KB)"
+  },
+  {
+    "timestamp": "2026-07-01T14:32:59.030Z",
+    "level": "info",
+    "message": "Starting synchronization (Manual)",
+    "details": "API URL: https://fcc-ped-sathwik-test.web.cern.ch/wp-json/wp/v2/posts"
+  },
+  {
+    "timestamp": "2026-07-01T14:28:47.761Z",
+    "level": "info",
+    "message": "Sync completed successfully"
+  },
+  {
+    "timestamp": "2026-07-01T14:28:47.760Z",
+    "level": "info",
+    "message": "Successfully regenerated markers.json with 5 markers (1.32 KB)"
+  },
+  {
+    "timestamp": "2026-07-01T14:28:47.411Z",
+    "level": "info",
+    "message": "Starting synchronization (Manual)",
+    "details": "API URL: https://fcc-ped-sathwik-test.web.cern.ch/wp-json/wp/v2/posts"
+  },
+  {
+    "timestamp": "2026-07-01T14:24:52.804Z",
+    "level": "info",
+    "message": "Sync completed successfully"
+  },
+  {
+    "timestamp": "2026-07-01T14:24:52.804Z",
+    "level": "info",
+    "message": "Successfully regenerated markers.json with 0 markers (0.00 KB)"
+  },
+  {
+    "timestamp": "2026-07-01T14:24:52.803Z",
+    "level": "warn",
+    "message": "Validation Skip: Post ID 533 (\"Austrian Institute of Technology\") excerpt contains no coordinates.",
+    "details": "Excerpt: <p>Memorandum of Understanding&nbsp;signed on 24&nbsp;April 2017 Addendum&nbsp;signed on 02 October 2017</p>\n"
+  },
+  {
+    "timestamp": "2026-07-01T14:24:52.802Z",
+    "level": "warn",
+    "message": "Validation Skip: Post ID 564 (\"HEPHY\") excerpt contains no coordinates.",
+    "details": "Excerpt: <p>Memorandum of Understanding signed on 28 August 2014</p>\n"
+  },
+  {
+    "timestamp": "2026-07-01T14:24:52.802Z",
+    "level": "warn",
+    "message": "Validation Skip: Post ID 567 (\"University of Innsbruck\") excerpt contains no coordinates.",
+    "details": "Excerpt: <p>Memorandum of Understanding&nbsp;signed on 29 May 2019 Addendum&nbsp;signed on 2 August 2019</p>\n"
+  },
+  {
+    "timestamp": "2026-07-01T14:24:52.801Z",
+    "level": "warn",
+    "message": "Validation Skip: Post ID 570 (\"Naturhistorisches Museum Wien\") excerpt contains no coordinates.",
+    "details": "Excerpt: <p>Memorandum of Understanding&nbsp;signed on 20 March&nbsp;2017 Addendum&nbsp;signed on 29 March 2017</p>\n"
+  },
+  {
+    "timestamp": "2026-07-01T14:24:52.800Z",
+    "level": "warn",
+    "message": "Validation Skip: Post ID 573 (\"Vienna University of Technology\") excerpt contains no coordinates.",
+    "details": "Excerpt: <p>Memorandum of Understanding&nbsp;signed on 28 July 2015 Addendum&nbsp;signed on 25 April 2016 Addendum&nbsp;signed on 19 October 2016 Addendum&nbsp;signed on 07 June 2018</p>\n"
+  },
+  {
+    "timestamp": "2026-07-01T14:24:52.800Z",
+    "level": "warn",
+    "message": "Validation Skip: Post ID 580 (\"ESA\") excerpt contains no coordinates.",
+    "details": "Excerpt: <p> Short Description Institute Name City Visit Website Description</p>\n"
+  },
+  {
+    "timestamp": "2026-07-01T14:24:52.175Z",
+    "level": "info",
+    "message": "Starting synchronization (Manual)",
+    "details": "API URL: https://fcc-ped-sathwik-test.web.cern.ch/wp-json/wp/v2/posts"
+  },
+  {
+    "timestamp": "2026-07-01T14:24:24.270Z",
+    "level": "info",
+    "message": "Scheduler service started"
+  },
+  {
+    "timestamp": "2026-07-01T14:24:24.268Z",
+    "level": "info",
+    "message": "Web server started on port 5050"
+  },
+  {
+    "timestamp": "2026-07-01T14:17:31.856Z",
+    "level": "info",
+    "message": "Sync completed successfully"
+  },
+  {
+    "timestamp": "2026-07-01T14:17:31.856Z",
+    "level": "info",
+    "message": "Successfully regenerated markers.json with 0 markers (0.00 KB)"
+  },
+  {
+    "timestamp": "2026-07-01T14:17:31.855Z",
+    "level": "warn",
+    "message": "Validation Skip: Post ID 533 (\"Austrian Institute of Technology\") excerpt contains no coordinates.",
+    "details": "Excerpt: <p>Memorandum of Understanding&nbsp;signed on 24&nbsp;April 2017 Addendum&nbsp;signed on 02 October 2017</p>\n"
+  },
+  {
+    "timestamp": "2026-07-01T14:17:31.854Z",
+    "level": "warn",
+    "message": "Validation Skip: Post ID 564 (\"HEPHY\") excerpt contains no coordinates.",
+    "details": "Excerpt: <p>Memorandum of Understanding signed on 28 August 2014</p>\n"
+  },
+  {
+    "timestamp": "2026-07-01T14:17:31.853Z",
+    "level": "warn",
+    "message": "Validation Skip: Post ID 567 (\"University of Innsbruck\") excerpt contains no coordinates.",
+    "details": "Excerpt: <p>Memorandum of Understanding&nbsp;signed on 29 May 2019 Addendum&nbsp;signed on 2 August 2019</p>\n"
+  },
+  {
+    "timestamp": "2026-07-01T14:17:31.853Z",
+    "level": "warn",
+    "message": "Validation Skip: Post ID 570 (\"Naturhistorisches Museum Wien\") excerpt contains no coordinates.",
+    "details": "Excerpt: <p>Memorandum of Understanding&nbsp;signed on 20 March&nbsp;2017 Addendum&nbsp;signed on 29 March 2017</p>\n"
+  },
+  {
+    "timestamp": "2026-07-01T14:17:31.853Z",
+    "level": "warn",
+    "message": "Validation Skip: Post ID 573 (\"Vienna University of Technology\") excerpt contains no coordinates.",
+    "details": "Excerpt: <p>Memorandum of Understanding&nbsp;signed on 28 July 2015 Addendum&nbsp;signed on 25 April 2016 Addendum&nbsp;signed on 19 October 2016 Addendum&nbsp;signed on 07 June 2018</p>\n"
+  },
+  {
+    "timestamp": "2026-07-01T14:17:31.852Z",
+    "level": "warn",
+    "message": "Validation Skip: Post ID 580 (\"ESA\") excerpt contains no coordinates.",
+    "details": "Excerpt: <p> Short Description Institute Name City Visit Website Description</p>\n"
+  },
+  {
+    "timestamp": "2026-07-01T14:17:31.364Z",
+    "level": "info",
+    "message": "Starting synchronization (Manual)",
+    "details": "API URL: https://fcc-ped-sathwik-test.web.cern.ch/wp-json/wp/v2/posts"
+  },
+  {
+    "timestamp": "2026-07-01T14:17:23.026Z",
+    "level": "info",
+    "message": "Scheduler service stopped"
+  },
+  {
+    "timestamp": "2026-07-01T14:17:23.024Z",
+    "level": "info",
+    "message": "Rescheduling sync job due to settings change"
+  },
+  {
+    "timestamp": "2026-07-01T14:15:57.618Z",
+    "level": "info",
+    "message": "Scheduler service stopped"
+  },
+  {
+    "timestamp": "2026-07-01T14:15:57.617Z",
+    "level": "info",
+    "message": "Rescheduling sync job due to settings change"
+  },
+  {
+    "timestamp": "2026-07-01T14:15:39.527Z",
+    "level": "info",
+    "message": "Scheduler service started"
+  },
+  {
+    "timestamp": "2026-07-01T14:15:39.526Z",
+    "level": "info",
+    "message": "Web server started on port 5050"
+  },
+  {
+    "timestamp": "2026-07-01T14:13:16.289Z",
+    "level": "info",
+    "message": "Scheduler service stopped"
+  },
+  {
+    "timestamp": "2026-07-01T14:13:16.288Z",
+    "level": "info",
+    "message": "Rescheduling sync job due to settings change"
+  },
+  {
+    "timestamp": "2026-07-01T14:12:04.757Z",
+    "level": "info",
+    "message": "Scheduler service started"
+  },
+  {
+    "timestamp": "2026-07-01T14:12:04.756Z",
+    "level": "info",
+    "message": "Web server started on port 5050"
+  },
+  {
+    "timestamp": "2026-07-01T14:09:36.652Z",
+    "level": "info",
+    "message": "Scheduler service started"
+  },
+  {
+    "timestamp": "2026-07-01T14:09:36.650Z",
+    "level": "info",
+    "message": "Web server started on port 5050"
+  },
+  {
+    "timestamp": "2026-07-01T14:06:22.333Z",
+    "level": "info",
+    "message": "Scheduler service started"
+  },
+  {
+    "timestamp": "2026-07-01T14:06:22.331Z",
+    "level": "info",
+    "message": "Web server started on port 5050"
+  },
+  {
+    "timestamp": "2026-07-01T14:05:42.147Z",
+    "level": "info",
+    "message": "Sync completed successfully"
+  },
+  {
+    "timestamp": "2026-07-01T14:05:42.147Z",
+    "level": "info",
+    "message": "Successfully regenerated markers.json with 5 markers (1.48 KB)"
+  },
+  {
+    "timestamp": "2026-07-01T14:05:42.146Z",
+    "level": "warn",
+    "message": "Validation Skip: Post ID 6 (\"Missing Coordinates University\") excerpt contains no coordinates.",
+    "details": "Excerpt: <p>This is a beautiful university, but we forgot to add its coordinates in this excerpt.</p>"
+  },
+  {
+    "timestamp": "2026-07-01T14:05:42.145Z",
+    "level": "warn",
+    "message": "Validation Skip: Post ID 5 (\"Invalid Coordinates University\") coordinates out of bounds.",
+    "details": "Coords: 95, 195"
+  },
+  {
+    "timestamp": "2026-07-01T14:05:42.133Z",
+    "level": "info",
+    "message": "Starting synchronization (Manual)",
+    "details": "API URL: http://localhost:5050/api/mock-wp"
+  },
+  {
+    "timestamp": "2026-07-01T14:05:40.158Z",
+    "level": "info",
+    "message": "Sync completed successfully"
+  },
+  {
+    "timestamp": "2026-07-01T14:05:40.157Z",
+    "level": "info",
+    "message": "Successfully regenerated markers.json with 5 markers (1.48 KB)"
+  },
+  {
+    "timestamp": "2026-07-01T14:05:40.156Z",
+    "level": "warn",
+    "message": "Validation Skip: Post ID 6 (\"Missing Coordinates University\") excerpt contains no coordinates.",
+    "details": "Excerpt: <p>This is a beautiful university, but we forgot to add its coordinates in this excerpt.</p>"
+  },
+  {
+    "timestamp": "2026-07-01T14:05:40.155Z",
+    "level": "warn",
+    "message": "Validation Skip: Post ID 5 (\"Invalid Coordinates University\") coordinates out of bounds.",
+    "details": "Coords: 95, 195"
+  },
+  {
+    "timestamp": "2026-07-01T14:05:40.138Z",
+    "level": "info",
+    "message": "Starting synchronization (Manual)",
+    "details": "API URL: http://localhost:5050/api/mock-wp"
+  },
+  {
+    "timestamp": "2026-07-01T14:05:31.682Z",
+    "level": "info",
+    "message": "Sync completed successfully"
+  },
+  {
+    "timestamp": "2026-07-01T14:05:31.681Z",
+    "level": "info",
+    "message": "Successfully regenerated markers.json with 5 markers (1.48 KB)"
+  },
+  {
+    "timestamp": "2026-07-01T14:05:31.680Z",
+    "level": "warn",
+    "message": "Validation Skip: Post ID 6 (\"Missing Coordinates University\") excerpt contains no coordinates.",
+    "details": "Excerpt: <p>This is a beautiful university, but we forgot to add its coordinates in this excerpt.</p>"
+  },
+  {
+    "timestamp": "2026-07-01T14:05:31.679Z",
+    "level": "warn",
+    "message": "Validation Skip: Post ID 5 (\"Invalid Coordinates University\") coordinates out of bounds.",
+    "details": "Coords: 95, 195"
+  },
+  {
+    "timestamp": "2026-07-01T14:05:31.566Z",
+    "level": "info",
+    "message": "Starting synchronization (Manual)",
+    "details": "API URL: http://localhost:5050/api/mock-wp"
+  },
+  {
+    "timestamp": "2026-07-01T14:03:46.051Z",
+    "level": "info",
+    "message": "Scheduler service started"
+  },
+  {
+    "timestamp": "2026-07-01T14:03:46.049Z",
+    "level": "info",
+    "message": "Web server started on port 5050"
+  },
+  {
+    "timestamp": "2026-07-01T13:59:43.255Z",
+    "level": "info",
+    "message": "Scheduler service started"
+  },
+  {
+    "timestamp": "2026-07-01T13:59:43.254Z",
+    "level": "info",
+    "message": "Web server started on port 5050"
+  },
+  {
+    "timestamp": "2026-07-01T13:56:40.029Z",
+    "level": "info",
+    "message": "Scheduler service started"
+  },
+  {
+    "timestamp": "2026-07-01T13:56:40.028Z",
+    "level": "info",
+    "message": "Web server started on port 5050"
+  },
+  {
+    "timestamp": "2026-07-01T13:56:29.488Z",
+    "level": "info",
+    "message": "Scheduler service stopped"
+  },
+  {
+    "timestamp": "2026-07-01T13:56:29.487Z",
+    "level": "info",
+    "message": "Rescheduling sync job due to settings change"
+  },
+  {
+    "timestamp": "2026-07-01T13:55:50.685Z",
+    "level": "info",
+    "message": "Sync completed successfully"
+  },
+  {
+    "timestamp": "2026-07-01T13:55:50.685Z",
+    "level": "info",
+    "message": "Successfully regenerated markers.json with 4 markers (1.23 KB)"
+  },
+  {
+    "timestamp": "2026-07-01T13:55:50.684Z",
+    "level": "warn",
+    "message": "Validation Skip: Duplicate coordinates for Post ID 7 (\"Duplicate Coordinates University (Geneva)\")",
+    "details": "Coords: 46.23307388854503, 6.055512805451645"
+  },
+  {
+    "timestamp": "2026-07-01T13:55:50.683Z",
+    "level": "warn",
+    "message": "Validation Skip: Post ID 6 (\"Missing Coordinates University\") excerpt contains no coordinates.",
+    "details": "Excerpt: <p>This is a beautiful university, but we forgot to add its coordinates in this excerpt.</p>"
+  },
+  {
+    "timestamp": "2026-07-01T13:55:50.683Z",
+    "level": "warn",
+    "message": "Validation Skip: Post ID 5 (\"Invalid Coordinates University\") coordinates out of bounds.",
+    "details": "Coords: 95, 195"
+  },
+  {
+    "timestamp": "2026-07-01T13:55:50.630Z",
+    "level": "info",
+    "message": "Starting synchronization (Manual)",
+    "details": "API URL: http://localhost:5050/api/mock-wp"
+  },
+  {
+    "timestamp": "2026-07-01T13:54:26.874Z",
+    "level": "info",
+    "message": "Scheduler service started"
+  },
+  {
+    "timestamp": "2026-07-01T13:54:26.872Z",
+    "level": "info",
+    "message": "Web server started on port 5050"
+  },
+  {
+    "timestamp": "2026-07-01T13:47:04.547Z",
+    "level": "info",
+    "message": "Sync completed successfully"
+  },
+  {
+    "timestamp": "2026-07-01T13:47:04.547Z",
+    "level": "info",
+    "message": "Successfully regenerated markers.json with 4 markers (1.23 KB)"
+  },
+  {
+    "timestamp": "2026-07-01T13:47:04.546Z",
+    "level": "warn",
+    "message": "Validation Skip: Duplicate coordinates for Post ID 7 (\"Duplicate Coordinates University (Geneva)\")",
+    "details": "Coords: 46.23307388854503, 6.055512805451645"
+  },
+  {
+    "timestamp": "2026-07-01T13:47:04.546Z",
+    "level": "warn",
+    "message": "Validation Skip: Post ID 6 (\"Missing Coordinates University\") excerpt contains no coordinates.",
+    "details": "Excerpt: <p>This is a beautiful university, but we forgot to add its coordinates in this excerpt.</p>"
+  },
+  {
+    "timestamp": "2026-07-01T13:47:04.545Z",
+    "level": "warn",
+    "message": "Validation Skip: Post ID 5 (\"Invalid Coordinates University\") coordinates out of bounds.",
+    "details": "Coords: 95, 195"
+  },
+  {
+    "timestamp": "2026-07-01T13:47:04.489Z",
+    "level": "info",
+    "message": "Starting synchronization (Manual)",
+    "details": "API URL: http://localhost:5050/api/mock-wp"
+  },
+  {
+    "timestamp": "2026-07-01T13:46:54.439Z",
+    "level": "info",
+    "message": "Scheduler service started"
+  },
+  {
+    "timestamp": "2026-07-01T13:46:54.437Z",
+    "level": "info",
+    "message": "Web server started on port 5050"
+  },
+  {
+    "timestamp": "2026-07-01T13:46:31.884Z",
+    "level": "info",
+    "message": "Sync completed successfully"
+  },
+  {
+    "timestamp": "2026-07-01T13:46:31.883Z",
+    "level": "info",
+    "message": "No content changes detected. Skip regenerating markers.json."
+  },
+  {
+    "timestamp": "2026-07-01T13:46:31.883Z",
+    "level": "warn",
+    "message": "Validation Skip: Duplicate coordinates for Post ID 7 (\"Duplicate Coordinates University (Geneva)\")",
+    "details": "Coords: 46.23307388854503, 6.055512805451645"
+  },
+  {
+    "timestamp": "2026-07-01T13:46:31.883Z",
+    "level": "warn",
+    "message": "Validation Skip: Post ID 6 (\"Missing Coordinates University\") excerpt contains no coordinates.",
+    "details": "Excerpt: <p>This is a beautiful university, but we forgot to add its coordinates in this excerpt.</p>"
+  },
+  {
+    "timestamp": "2026-07-01T13:46:31.883Z",
+    "level": "warn",
+    "message": "Validation Skip: Post ID 5 (\"Invalid Coordinates University\") coordinates out of bounds.",
+    "details": "Coords: 95, 195"
+  },
+  {
+    "timestamp": "2026-07-01T13:46:31.878Z",
+    "level": "info",
+    "message": "Starting synchronization (Manual)",
+    "details": "API URL: http://localhost:5050/api/mock-wp"
+  },
+  {
+    "timestamp": "2026-07-01T13:46:30.232Z",
+    "level": "info",
+    "message": "Scheduler service stopped"
+  },
+  {
+    "timestamp": "2026-07-01T13:46:30.232Z",
+    "level": "info",
+    "message": "Rescheduling sync job due to settings change"
+  },
+  {
+    "timestamp": "2026-07-01T13:46:23.294Z",
+    "level": "info",
+    "message": "Sync completed successfully"
+  },
+  {
+    "timestamp": "2026-07-01T13:46:23.292Z",
+    "level": "info",
+    "message": "Successfully regenerated markers.json with 5 markers (1.48 KB)"
+  },
+  {
+    "timestamp": "2026-07-01T13:46:23.290Z",
+    "level": "warn",
+    "message": "Validation Skip: Post ID 6 (\"Missing Coordinates University\") excerpt contains no coordinates.",
+    "details": "Excerpt: <p>This is a beautiful university, but we forgot to add its coordinates in this excerpt.</p>"
+  },
+  {
+    "timestamp": "2026-07-01T13:46:23.290Z",
+    "level": "warn",
+    "message": "Validation Skip: Post ID 5 (\"Invalid Coordinates University\") coordinates out of bounds.",
+    "details": "Coords: 95, 195"
+  },
+  {
+    "timestamp": "2026-07-01T13:46:23.126Z",
+    "level": "info",
+    "message": "Starting synchronization (Manual)",
+    "details": "API URL: http://localhost:5050/api/mock-wp"
+  },
+  {
+    "timestamp": "2026-07-01T13:44:36.946Z",
+    "level": "info",
+    "message": "Scheduler service stopped"
+  },
+  {
+    "timestamp": "2026-07-01T13:44:36.943Z",
+    "level": "info",
+    "message": "Rescheduling sync job due to settings change"
+  },
+  {
+    "timestamp": "2026-07-01T13:44:28.762Z",
+    "level": "error",
+    "message": "WordPress API URL is not configured. Sync skipped."
+  },
+  {
+    "timestamp": "2026-07-01T13:44:28.761Z",
+    "level": "info",
+    "message": "Starting synchronization (Scheduled)",
+    "details": "API URL: None configured"
+  },
+  {
+    "timestamp": "2026-07-01T13:44:28.761Z",
+    "level": "info",
+    "message": "Scheduler service started"
+  },
+  {
+    "timestamp": "2026-07-01T13:44:28.760Z",
+    "level": "info",
+    "message": "Web server started on port 5050"
+  },
+  {
+    "timestamp": "2026-07-01T13:43:58.487Z",
+    "level": "error",
+    "message": "WordPress API URL is not configured. Sync skipped."
+  },
+  {
+    "timestamp": "2026-07-01T13:43:58.487Z",
+    "level": "info",
+    "message": "Starting synchronization (Scheduled)",
+    "details": "API URL: None configured"
+  },
+  {
+    "timestamp": "2026-07-01T13:43:58.486Z",
+    "level": "info",
+    "message": "Scheduler service started"
+  },
+  {
+    "timestamp": "2026-07-01T13:43:58.485Z",
+    "level": "info",
+    "message": "Web server started on port 5050"
+  }
+]
