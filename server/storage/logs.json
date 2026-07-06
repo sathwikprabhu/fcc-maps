@@ -1,5 +1,283 @@
 [
   {
+    "timestamp": "2026-07-06T09:03:29.995Z",
+    "level": "info",
+    "message": "Scheduler service started"
+  },
+  {
+    "timestamp": "2026-07-06T09:03:29.990Z",
+    "level": "info",
+    "message": "Web server started on port 5050"
+  },
+  {
+    "timestamp": "2026-07-06T09:03:29.884Z",
+    "level": "info",
+    "message": "Scheduler service stopped"
+  },
+  {
+    "timestamp": "2026-07-06T08:45:38.050Z",
+    "level": "info",
+    "message": "Sync completed successfully"
+  },
+  {
+    "timestamp": "2026-07-06T08:45:38.050Z",
+    "level": "info",
+    "message": "Successfully regenerated markers.json with 5 markers (1.27 KB)"
+  },
+  {
+    "timestamp": "2026-07-06T08:45:37.443Z",
+    "level": "info",
+    "message": "Starting synchronization (Manual)",
+    "details": "API URL: https://fcc-ped-sathwik-test.web.cern.ch/wp-json/wp/v2/posts"
+  },
+  {
+    "timestamp": "2026-07-06T08:42:00.299Z",
+    "level": "info",
+    "message": "Scheduler service started"
+  },
+  {
+    "timestamp": "2026-07-06T08:42:00.297Z",
+    "level": "info",
+    "message": "Web server started on port 5050"
+  },
+  {
+    "timestamp": "2026-07-06T02:36:05.647Z",
+    "level": "error",
+    "message": "Sync failed: TypeError: fetch failed"
+  },
+  {
+    "timestamp": "2026-07-06T02:36:05.645Z",
+    "level": "warn",
+    "message": "Fetch attempt 3/3 failed",
+    "details": "TypeError: fetch failed"
+  },
+  {
+    "timestamp": "2026-07-06T02:36:00.532Z",
+    "level": "warn",
+    "message": "Fetch attempt 2/3 failed",
+    "details": "TypeError: fetch failed"
+  },
+  {
+    "timestamp": "2026-07-06T02:35:55.406Z",
+    "level": "warn",
+    "message": "Fetch attempt 1/3 failed",
+    "details": "TypeError: fetch failed"
+  },
+  {
+    "timestamp": "2026-07-06T02:35:54.825Z",
+    "level": "info",
+    "message": "Starting synchronization (Scheduled)",
+    "details": "API URL: https://fcc-ped-sathwik-test.web.cern.ch/wp-json/wp/v2/posts"
+  },
+  {
+    "timestamp": "2026-07-05T14:23:23.169Z",
+    "level": "error",
+    "message": "Sync failed: TypeError: fetch failed"
+  },
+  {
+    "timestamp": "2026-07-05T14:23:23.166Z",
+    "level": "warn",
+    "message": "Fetch attempt 3/3 failed",
+    "details": "TypeError: fetch failed"
+  },
+  {
+    "timestamp": "2026-07-05T14:23:18.045Z",
+    "level": "warn",
+    "message": "Fetch attempt 2/3 failed",
+    "details": "TypeError: fetch failed"
+  },
+  {
+    "timestamp": "2026-07-05T14:23:12.926Z",
+    "level": "warn",
+    "message": "Fetch attempt 1/3 failed",
+    "details": "TypeError: fetch failed"
+  },
+  {
+    "timestamp": "2026-07-05T14:23:12.703Z",
+    "level": "info",
+    "message": "Starting synchronization (Scheduled)",
+    "details": "API URL: https://fcc-ped-sathwik-test.web.cern.ch/wp-json/wp/v2/posts"
+  },
+  {
+    "timestamp": "2026-07-05T02:15:50.607Z",
+    "level": "error",
+    "message": "Sync failed: TypeError: fetch failed"
+  },
+  {
+    "timestamp": "2026-07-05T02:15:50.605Z",
+    "level": "warn",
+    "message": "Fetch attempt 3/3 failed",
+    "details": "TypeError: fetch failed"
+  },
+  {
+    "timestamp": "2026-07-05T02:15:45.373Z",
+    "level": "warn",
+    "message": "Fetch attempt 2/3 failed",
+    "details": "TypeError: fetch failed"
+  },
+  {
+    "timestamp": "2026-07-05T02:15:40.241Z",
+    "level": "warn",
+    "message": "Fetch attempt 1/3 failed",
+    "details": "TypeError: fetch failed"
+  },
+  {
+    "timestamp": "2026-07-05T02:15:40.019Z",
+    "level": "info",
+    "message": "Starting synchronization (Scheduled)",
+    "details": "API URL: https://fcc-ped-sathwik-test.web.cern.ch/wp-json/wp/v2/posts"
+  },
+  {
+    "timestamp": "2026-07-04T14:13:09.600Z",
+    "level": "error",
+    "message": "Sync failed: TypeError: fetch failed"
+  },
+  {
+    "timestamp": "2026-07-04T14:13:09.598Z",
+    "level": "warn",
+    "message": "Fetch attempt 3/3 failed",
+    "details": "TypeError: fetch failed"
+  },
+  {
+    "timestamp": "2026-07-04T14:13:04.212Z",
+    "level": "warn",
+    "message": "Fetch attempt 2/3 failed",
+    "details": "TypeError: fetch failed"
+  },
+  {
+    "timestamp": "2026-07-04T14:12:59.082Z",
+    "level": "warn",
+    "message": "Fetch attempt 1/3 failed",
+    "details": "TypeError: fetch failed"
+  },
+  {
+    "timestamp": "2026-07-04T14:12:58.863Z",
+    "level": "info",
+    "message": "Starting synchronization (Scheduled)",
+    "details": "API URL: https://fcc-ped-sathwik-test.web.cern.ch/wp-json/wp/v2/posts"
+  },
+  {
+    "timestamp": "2026-07-04T02:11:43.676Z",
+    "level": "error",
+    "message": "Sync failed: TypeError: fetch failed"
+  },
+  {
+    "timestamp": "2026-07-04T02:11:43.674Z",
+    "level": "warn",
+    "message": "Fetch attempt 3/3 failed",
+    "details": "TypeError: fetch failed"
+  },
+  {
+    "timestamp": "2026-07-04T02:11:38.554Z",
+    "level": "warn",
+    "message": "Fetch attempt 2/3 failed",
+    "details": "TypeError: fetch failed"
+  },
+  {
+    "timestamp": "2026-07-04T02:11:33.425Z",
+    "level": "warn",
+    "message": "Fetch attempt 1/3 failed",
+    "details": "TypeError: fetch failed"
+  },
+  {
+    "timestamp": "2026-07-04T02:11:32.796Z",
+    "level": "info",
+    "message": "Starting synchronization (Scheduled)",
+    "details": "API URL: https://fcc-ped-sathwik-test.web.cern.ch/wp-json/wp/v2/posts"
+  },
+  {
+    "timestamp": "2026-07-03T13:41:30.558Z",
+    "level": "info",
+    "message": "Sync completed successfully"
+  },
+  {
+    "timestamp": "2026-07-03T13:41:30.557Z",
+    "level": "info",
+    "message": "Successfully regenerated markers.json with 5 markers (1.27 KB)"
+  },
+  {
+    "timestamp": "2026-07-03T13:41:30.139Z",
+    "level": "info",
+    "message": "Starting synchronization (Manual)",
+    "details": "API URL: https://fcc-ped-sathwik-test.web.cern.ch/wp-json/wp/v2/posts"
+  },
+  {
+    "timestamp": "2026-07-03T13:40:52.378Z",
+    "level": "info",
+    "message": "Scheduler service started"
+  },
+  {
+    "timestamp": "2026-07-03T13:40:52.377Z",
+    "level": "info",
+    "message": "Web server started on port 5050"
+  },
+  {
+    "timestamp": "2026-07-03T13:40:46.768Z",
+    "level": "info",
+    "message": "Scheduler service stopped"
+  },
+  {
+    "timestamp": "2026-07-03T09:41:24.911Z",
+    "level": "info",
+    "message": "Sync completed successfully"
+  },
+  {
+    "timestamp": "2026-07-03T09:41:24.910Z",
+    "level": "info",
+    "message": "Successfully regenerated markers.json with 5 markers (1.27 KB)"
+  },
+  {
+    "timestamp": "2026-07-03T09:41:24.147Z",
+    "level": "info",
+    "message": "Starting synchronization (Scheduled)",
+    "details": "API URL: https://fcc-ped-sathwik-test.web.cern.ch/wp-json/wp/v2/posts"
+  },
+  {
+    "timestamp": "2026-07-02T21:41:23.998Z",
+    "level": "error",
+    "message": "Sync failed: TypeError: fetch failed"
+  },
+  {
+    "timestamp": "2026-07-02T21:41:23.996Z",
+    "level": "warn",
+    "message": "Fetch attempt 3/3 failed",
+    "details": "TypeError: fetch failed"
+  },
+  {
+    "timestamp": "2026-07-02T21:41:18.886Z",
+    "level": "warn",
+    "message": "Fetch attempt 2/3 failed",
+    "details": "TypeError: fetch failed"
+  },
+  {
+    "timestamp": "2026-07-02T21:41:13.760Z",
+    "level": "warn",
+    "message": "Fetch attempt 1/3 failed",
+    "details": "TypeError: fetch failed"
+  },
+  {
+    "timestamp": "2026-07-02T21:41:13.174Z",
+    "level": "info",
+    "message": "Starting synchronization (Scheduled)",
+    "details": "API URL: https://fcc-ped-sathwik-test.web.cern.ch/wp-json/wp/v2/posts"
+  },
+  {
+    "timestamp": "2026-07-02T12:04:19.306Z",
+    "level": "info",
+    "message": "Sync completed successfully"
+  },
+  {
+    "timestamp": "2026-07-02T12:04:19.305Z",
+    "level": "info",
+    "message": "Successfully regenerated markers.json with 6 markers (1.49 KB)"
+  },
+  {
+    "timestamp": "2026-07-02T12:04:18.701Z",
+    "level": "info",
+    "message": "Starting synchronization (Manual)",
+    "details": "API URL: https://fcc-ped-sathwik-test.web.cern.ch/wp-json/wp/v2/posts"
+  },
+  {
     "timestamp": "2026-07-02T09:20:27.955Z",
     "level": "info",
     "message": "Scheduler service started"

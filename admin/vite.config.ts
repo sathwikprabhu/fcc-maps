@@ -18,7 +18,9 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': 'http://localhost:5050',
-      '/markers.json': 'http://localhost:5050'
+      '/markers.json': 'http://localhost:5050',
+      '/embed': 'http://localhost:5050',
+      '/uploads': 'http://localhost:5050'
     }
   }
 })

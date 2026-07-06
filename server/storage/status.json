@@ -1,13 +1,13 @@
 {
-  "lastSyncTime": "2026-07-02T09:09:35.090Z",
-  "nextSyncTime": "2026-07-02T21:20:27.956Z",
+  "lastSyncTime": "2026-07-06T08:45:38.050Z",
+  "nextSyncTime": "2026-07-06T21:03:29.996Z",
   "status": "idle",
   "lastError": null,
   "stats": {
-    "markerCount": 6,
+    "markerCount": 5,
     "invalidPostsCount": 0,
     "duplicateCoordinatesCount": 0,
-    "jsonFileSize": 1528
+    "jsonFileSize": 1304
   },
-  "apiHash": "b09e5a5d14b08428ac8f69c54d6dff018cdc0c279c853a57738f572d4ca64b6e"
+  "apiHash": "aa911f72137ef72257f188fc10db1e978c88d1411c1bcfbc43180462e7a534e9"
 }
