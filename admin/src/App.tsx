@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
   MapPin,
   RefreshCw,
@@ -57,11 +58,108 @@ const BASE_MAPS = [
   {
     name: "OpenTopoMap (Topographical)",
     url: "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png"
+  },
+  {
+    name: "MapTiler Landscape (Requires API Key)",
+    url: "https://api.maptiler.com/maps/landscape/{z}/{x}/{y}.png?key=YOUR_API_KEY"
   }
 ];
 
+function ColorPicker({ value, onChange }: { value: string; onChange: (val: string) => void }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const popoverRef = React.useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (popoverRef.current && !popoverRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const HUES = [0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330];
+  
+  const hslToHex = (h: number, s: number, l: number) => {
+    l /= 100;
+    const a = (s * Math.min(l, 1 - l)) / 100;
+    const f = (n: number) => {
+      const k = (n + h / 30) % 12;
+      const color = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+      const hex = Math.round(255 * color).toString(16);
+      return hex.length === 1 ? '0' + hex : hex;
+    };
+    return `#${f(0)}${f(8)}${f(4)}`;
+  };
+
+  const presetColors = HUES.map(h => hslToHex(h, 100, 35));
+
+  return (
+    <div className="relative" ref={popoverRef}>
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center gap-2 px-2 py-1.5 border rounded-md hover:bg-muted/50 transition-colors w-full justify-between"
+      >
+        <div className="flex items-center gap-2">
+          <div
+            className="w-4 h-4 rounded-full border shadow-sm"
+            style={{ backgroundColor: value }}
+          />
+          <span className="text-xs text-muted-foreground font-mono uppercase">{value}</span>
+        </div>
+        <ChevronDown className="h-3 w-3 text-muted-foreground" />
+      </button>
+
+      {isOpen && (
+        <div className="absolute right-0 mt-2 z-50 p-3 bg-popover text-popover-foreground border rounded-md shadow-md w-48">
+          <div className="grid grid-cols-4 gap-2">
+            {presetColors.map((color) => (
+              <button
+                key={color}
+                type="button"
+                onClick={() => {
+                  onChange(color);
+                  setIsOpen(false);
+                }}
+                className={`w-6 h-6 rounded-full border transition-all hover:scale-110 active:scale-95 ${
+                  value.toLowerCase() === color.toLowerCase()
+                    ? 'ring-2 ring-offset-2 ring-foreground border-foreground scale-110'
+                    : 'border-muted hover:border-foreground/50'
+                }`}
+                style={{ backgroundColor: color }}
+                title={color}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function App() {
-  const [activeTab, setActiveTab] = useState<string>('dashboard');
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const getTabFromPath = (pathname: string) => {
+    const cleanPath = pathname.replace(/\/$/, '');
+    if (cleanPath === '/embed') return 'embed';
+    if (cleanPath === '/colors') return 'colors';
+    if (cleanPath === '/settings') return 'settings';
+    return 'dashboard';
+  };
+
+  const activeTab = getTabFromPath(location.pathname);
+
+  const setActiveTab = (tab: string) => {
+    if (tab === 'dashboard') {
+      navigate('/');
+    } else {
+      navigate(`/${tab}`);
+    }
+  };
   const [settings, setSettings] = useState<Settings>({
     wpApiUrl: '',
     authEnabled: false,
@@ -384,10 +482,9 @@ export default function App() {
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList>
               <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-              <TabsTrigger value="sync">Sync & Logs</TabsTrigger>
+              <TabsTrigger value="embed">Embed</TabsTrigger>
               <TabsTrigger value="colors">Colors</TabsTrigger>
               <TabsTrigger value="settings">Settings</TabsTrigger>
-              <TabsTrigger value="embed">Embed</TabsTrigger>
             </TabsList>
           </Tabs>
         </div>
@@ -584,102 +681,6 @@ export default function App() {
 
           </TabsContent>
 
-          {/* ── Sync & Logs ── */}
-          <TabsContent value="sync" className="space-y-6">
-
-            <Card>
-              <CardContent className="p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div>
-                  <h3 className="font-semibold">Manual Sync</h3>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Triggers a WordPress crawl. The existing markers.json will not be overwritten if the API is unreachable.
-                  </p>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Status: <span className="font-medium text-foreground">{status?.status ?? '—'}</span>
-                    {' · '}Last sync: <span className="font-medium text-foreground">{formatDate(status?.lastSyncTime ?? null)}</span>
-                  </p>
-                </div>
-                <Button
-                  onClick={handleSyncNow}
-                  disabled={status?.status === 'syncing' || syncingLocal}
-                >
-                  <RefreshCw className={`h-4 w-4 mr-2 ${status?.status === 'syncing' || syncingLocal ? 'animate-spin' : ''}`} />
-                  Sync Now
-                </Button>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <div>
-                  <CardTitle className="text-base">System Logs</CardTitle>
-                  <CardDescription>Latest 500 actions logged by the backend scheduler.</CardDescription>
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleClearLogs}
-                  disabled={logs.length === 0}
-                >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Clear logs
-                </Button>
-              </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-8"></TableHead>
-                      <TableHead>Timestamp</TableHead>
-                      <TableHead>Level</TableHead>
-                      <TableHead>Message</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {logs.map((log, idx) => (
-                      <React.Fragment key={idx}>
-                        <TableRow
-                          onClick={() => setExpandedLogIdx(expandedLogIdx === idx ? null : idx)}
-                          className="cursor-pointer"
-                        >
-                          <TableCell>
-                            {log.details
-                              ? expandedLogIdx === idx
-                                ? <ChevronUp className="h-4 w-4 text-muted-foreground" />
-                                : <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                              : null}
-                          </TableCell>
-                          <TableCell className="text-muted-foreground">{new Date(log.timestamp).toLocaleString()}</TableCell>
-                          <TableCell>
-                            <Badge variant={logLevelVariant(log.level)}>{log.level}</Badge>
-                          </TableCell>
-                          <TableCell>{log.message}</TableCell>
-                        </TableRow>
-                        {expandedLogIdx === idx && log.details && (
-                          <TableRow>
-                            <TableCell />
-                            <TableCell colSpan={3}>
-                              <pre className="text-xs text-muted-foreground bg-muted rounded p-3 whitespace-pre-wrap">
-                                {log.details}
-                              </pre>
-                            </TableCell>
-                          </TableRow>
-                        )}
-                      </React.Fragment>
-                    ))}
-                    {logs.length === 0 && (
-                      <TableRow>
-                        <TableCell colSpan={4} className="text-center text-muted-foreground py-12">
-                          No logs recorded yet.
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-
-          </TabsContent>
 
           {/* ── Colors ── */}
           <TabsContent value="colors" className="space-y-6">
@@ -712,18 +713,13 @@ export default function App() {
                               <TableCell className="font-medium">{cat}</TableCell>
                               <TableCell>
                                 <div className="flex items-center gap-2">
-                                  <input
-                                    type="color"
+                                  <ColorPicker
                                     value={colors.categories[cat] || '#2563eb'}
-                                    onChange={(e) => setColors(prev => ({
+                                    onChange={(color) => setColors(prev => ({
                                       ...prev,
-                                      categories: { ...prev.categories, [cat]: e.target.value }
+                                      categories: { ...prev.categories, [cat]: color }
                                     }))}
-                                    className="h-7 w-12 border rounded cursor-pointer p-0 bg-transparent"
                                   />
-                                  <span className="text-xs text-muted-foreground tabular-nums">
-                                    {colors.categories[cat] || '#2563eb'}
-                                  </span>
                                 </div>
                               </TableCell>
                             </TableRow>
@@ -759,18 +755,13 @@ export default function App() {
                               <TableCell className="font-medium">{tag}</TableCell>
                               <TableCell>
                                 <div className="flex items-center gap-2">
-                                  <input
-                                    type="color"
+                                  <ColorPicker
                                     value={colors.tags[tag] || '#71717a'}
-                                    onChange={(e) => setColors(prev => ({
+                                    onChange={(color) => setColors(prev => ({
                                       ...prev,
-                                      tags: { ...prev.tags, [tag]: e.target.value }
+                                      tags: { ...prev.tags, [tag]: color }
                                     }))}
-                                    className="h-7 w-12 border rounded cursor-pointer p-0 bg-transparent"
                                   />
-                                  <span className="text-xs text-muted-foreground tabular-nums">
-                                    {colors.tags[tag] || '#71717a'}
-                                  </span>
                                 </div>
                               </TableCell>
                             </TableRow>
@@ -848,10 +839,20 @@ export default function App() {
                 >
                   Map & Scheduler
                 </a>
+                <a 
+                  href="#sync-logs" 
+                  onClick={() => setActiveSection('sync-logs')}
+                  className={`px-3 py-2 text-sm font-medium rounded-md transition-colors flex items-center gap-2 ${
+                    activeSection === 'sync-logs' ? 'bg-muted text-foreground' : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
+                  }`}
+                >
+                  Sync & Logs
+                </a>
               </div>
 
-              {/* Settings Form Column */}
-              <form onSubmit={handleSaveSettings} className="md:col-span-3 space-y-6">
+              {/* Settings Column */}
+              <div className="md:col-span-3 space-y-6">
+                <form onSubmit={handleSaveSettings} className="space-y-6">
                 
                 {/* Branding Card */}
                 <div id="branding" className="scroll-mt-20">
@@ -1049,14 +1050,35 @@ export default function App() {
                         <Label htmlFor="baseMapUrl">Base Map Style</Label>
                         <select
                           id="baseMapUrl"
-                          value={formSettings.baseMapUrl}
-                          onChange={(e) => setFormSettings(prev => ({ ...prev, baseMapUrl: e.target.value }))}
+                          value={BASE_MAPS.some(m => m.url === formSettings.baseMapUrl) ? formSettings.baseMapUrl : "custom"}
+                          onChange={(e) => {
+                            if (e.target.value !== "custom") {
+                              setFormSettings(prev => ({ ...prev, baseMapUrl: e.target.value }));
+                            }
+                          }}
                           className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                         >
                           {BASE_MAPS.map(map => (
                             <option key={map.url} value={map.url}>{map.name}</option>
                           ))}
+                          {!BASE_MAPS.some(m => m.url === formSettings.baseMapUrl) && (
+                            <option value="custom">Custom URL / Template</option>
+                          )}
                         </select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="baseMapUrlCustom">Base Map URL Template</Label>
+                        <Input
+                          id="baseMapUrlCustom"
+                          type="text"
+                          value={formSettings.baseMapUrl || ''}
+                          onChange={(e) => setFormSettings(prev => ({ ...prev, baseMapUrl: e.target.value }))}
+                          placeholder="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          Custom XYZ or MapTiler raster tile URL template. If using MapTiler, make sure to replace <code>YOUR_API_KEY</code> with your MapTiler token.
+                        </p>
                       </div>
                       
                       <div className="h-[200px] border rounded overflow-hidden">
@@ -1163,8 +1185,106 @@ export default function App() {
 
               </form>
 
+              {/* Sync & Logs inside Settings */}
+              <div id="sync-logs" className="space-y-6 scroll-mt-20">
+                <Card>
+                  <CardContent className="p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                      <h3 className="font-semibold">Manual Sync</h3>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Triggers a WordPress crawl. The existing markers.json will not be overwritten if the API is unreachable.
+                      </p>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Status: <span className="font-medium text-foreground">{status?.status ?? '—'}</span>
+                        {' · '}Last sync: <span className="font-medium text-foreground">{formatDate(status?.lastSyncTime ?? null)}</span>
+                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      onClick={handleSyncNow}
+                      disabled={status?.status === 'syncing' || syncingLocal}
+                    >
+                      <RefreshCw className={`h-4 w-4 mr-2 ${status?.status === 'syncing' || syncingLocal ? 'animate-spin' : ''}`} />
+                      Sync Now
+                    </Button>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="flex flex-row items-center justify-between">
+                    <div>
+                      <CardTitle className="text-base">System Logs</CardTitle>
+                      <CardDescription>Latest 500 actions logged by the backend scheduler.</CardDescription>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleClearLogs}
+                      disabled={logs.length === 0}
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Clear logs
+                    </Button>
+                  </CardHeader>
+                  <CardContent>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="w-8"></TableHead>
+                          <TableHead>Timestamp</TableHead>
+                          <TableHead>Level</TableHead>
+                          <TableHead>Message</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {logs.map((log, idx) => (
+                          <React.Fragment key={idx}>
+                            <TableRow
+                              onClick={() => setExpandedLogIdx(expandedLogIdx === idx ? null : idx)}
+                              className="cursor-pointer"
+                            >
+                              <TableCell>
+                                {log.details
+                                  ? expandedLogIdx === idx
+                                    ? <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                                    : <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                                  : null}
+                              </TableCell>
+                              <TableCell className="text-muted-foreground">{new Date(log.timestamp).toLocaleString()}</TableCell>
+                              <TableCell>
+                                <Badge variant={logLevelVariant(log.level)}>{log.level}</Badge>
+                              </TableCell>
+                              <TableCell>{log.message}</TableCell>
+                            </TableRow>
+                            {expandedLogIdx === idx && log.details && (
+                              <TableRow>
+                                <TableCell />
+                                <TableCell colSpan={3}>
+                                  <pre className="text-xs text-muted-foreground bg-muted rounded p-3 whitespace-pre-wrap">
+                                    {log.details}
+                                  </pre>
+                                </TableCell>
+                              </TableRow>
+                            )}
+                          </React.Fragment>
+                        ))}
+                        {logs.length === 0 && (
+                          <TableRow>
+                            <TableCell colSpan={4} className="text-center text-muted-foreground py-12">
+                              No logs recorded yet.
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </TableBody>
+                    </Table>
+                  </CardContent>
+                </Card>
+              </div>
+
             </div>
-          </TabsContent>
+          </div>
+        </TabsContent>
 
           {/* ── Embed ── */}
           <TabsContent value="embed">
