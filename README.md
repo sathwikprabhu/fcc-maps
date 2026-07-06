@@ -2,6 +2,13 @@
 
 An interactive map generator and administration dashboard. The project consists of a TypeScript backend server and a React admin interface using ShadCN UI and Leaflet.
 
+## Functionality
+
+This application allows you to:
+* Configure map branding, custom colors, coordinates, zoom levels, and clustering thresholds.
+* Fetch and synchronize map markers from a WordPress API, saving them to local configuration files.
+* Serve an interactive Leaflet map widget that can be easily embedded on other websites.
+
 ## Project Structure
 
 * **admin**: React frontend built with Vite, Tailwind CSS, and ShadCN UI. Accessible at `/admin`.
