@@ -9,7 +9,7 @@
     "dev": "concurrently --kill-others \"npm run dev:server\" \"npm run dev:admin\"",
     "build:server": "npm run build --prefix server",
     "build:admin": "npm run build --prefix admin",
-    "build": "npm run build:server && npm run build:admin",
+    "build": "npm install --prefix server && npm install --prefix admin && npm run build:server && npm run build:admin",
     "start": "npm run start --prefix server"
   },
   "devDependencies": {
