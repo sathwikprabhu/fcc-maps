@@ -19,6 +19,14 @@ app.use('/api', (req, res, next) => {
   next();
 });
 
+// Health Check
+app.get('/health', (req, res) => {
+  res.status(200).send('OK');
+});
+app.get('/', (req, res) => {
+  res.status(200).send('FCC Maps Server is running');
+});
+
 // API Routes
 app.use('/api', apiRouter);
 
