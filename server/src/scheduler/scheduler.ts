@@ -147,7 +147,9 @@ export class SchedulerService {
         allPosts = await this.fetchWordPressPosts(settings);
         success = true;
       } catch (error) {
-        const errStr = String(error);
+        const errStr = error instanceof Error && (error as any).cause
+          ? `${error.message} (Cause: ${(error as any).cause.message || String((error as any).cause)})`
+          : String(error);
         storage.addLog('warn', `Fetch attempt ${attempt}/${maxRetries} failed`, errStr);
         if (attempt < maxRetries) {
           // Wait 5 seconds before retrying
