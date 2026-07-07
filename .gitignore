@@ -10,7 +10,7 @@ public/uploads/
 public/markers.json
 
 # Local configurations & data storage
-server/storage/*.json
+server/storage/
 !server/storage/settings.json.example
 .env
 .env.*

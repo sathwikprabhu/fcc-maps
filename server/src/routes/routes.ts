@@ -60,7 +60,7 @@ router.post('/upload-logo', (req: Request, res: Response) => {
     const base64Data = base64.replace(/^data:image\/\w+;base64,/, "");
     const buffer = Buffer.from(base64Data, 'base64');
 
-    const uploadsDir = path.join(__dirname, '../../../public/uploads');
+    const uploadsDir = path.join(__dirname, '../../storage/uploads');
     if (!fs.existsSync(uploadsDir)) {
       fs.mkdirSync(uploadsDir, { recursive: true });
     }

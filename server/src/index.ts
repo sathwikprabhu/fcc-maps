@@ -22,9 +22,13 @@ app.use('/api', (req, res, next) => {
 // API Routes
 app.use('/api', apiRouter);
 
-// Serve markers.json and embed page statically from the root public directory
+// Serve embed page and admin dashboard statically from the root public directory
 const publicPath = path.join(__dirname, '../../public');
 app.use(express.static(publicPath));
+
+// Serve dynamic markers.json and uploaded files statically from the storage directory
+const storagePath = path.join(__dirname, '../../storage');
+app.use(express.static(storagePath));
 
 // Fallback for SPA routing if admin dashboard is built into public/admin
 app.get('/admin', (req, res) => {

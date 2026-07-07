@@ -7,9 +7,7 @@ const SETTINGS_PATH = path.join(STORAGE_DIR, 'settings.json');
 const STATUS_PATH = path.join(STORAGE_DIR, 'status.json');
 const LOGS_PATH = path.join(STORAGE_DIR, 'logs.json');
 
-// public markers path: root/public/markers.json
-const PUBLIC_DIR = path.join(__dirname, '../../../public');
-const MARKERS_PATH = path.join(PUBLIC_DIR, 'markers.json');
+const MARKERS_PATH = path.join(STORAGE_DIR, 'markers.json');
 
 const DEFAULT_SETTINGS: Settings = {
   wpApiUrl: '',
@@ -49,7 +47,6 @@ function ensureDirExists(dirPath: string) {
 export class StorageService {
   constructor() {
     ensureDirExists(STORAGE_DIR);
-    ensureDirExists(PUBLIC_DIR);
   }
 
   getSettings(): Settings {
