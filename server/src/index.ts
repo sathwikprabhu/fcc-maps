@@ -39,7 +39,7 @@ app.get('/admin/*', (req, res) => {
 });
 
 // Start server
-const server = app.listen(PORT, () => {
+const server = app.listen(Number(PORT), '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);
   storage.addLog('info', `Web server started on port ${PORT}`);
   
