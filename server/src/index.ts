@@ -8,6 +8,9 @@ import { storage } from './services/storage';
 
 dotenv.config();
 
+// Bypass SSL/TLS certificate warnings (needed for CERN intranet endpoints)
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+
 const app = express();
 const PORT = process.env.PORT || 5050;
 
@@ -35,7 +38,7 @@ const publicPath = path.join(__dirname, '../../public');
 app.use(express.static(publicPath));
 
 // Serve dynamic markers.json and uploaded files statically from the storage directory
-const storagePath = path.join(__dirname, '../../storage');
+const storagePath = path.join(__dirname, '../storage');
 app.use(express.static(storagePath));
 
 // Fallback for SPA routing if admin dashboard is built into public/admin
