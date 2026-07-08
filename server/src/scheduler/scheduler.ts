@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import https from 'https';
 import { storage } from '../services/storage';
 import { Marker, Settings, SyncStatus, SyncStats } from '../types';
 
@@ -316,8 +317,11 @@ export class SchedulerService {
       const separator = settings.wpApiUrl.includes('?') ? '&' : '?';
       // Request embedded fields (e.g. categories, media) to get images and terms in one call
       const url = `${settings.wpApiUrl}${separator}page=${page}&per_page=${perPage}&_embed=1`;
-      
-      const response = await fetch(url, { headers });
+
+      // Use a scoped agent that allows self-signed certs only for this endpoint
+      // (needed for CERN intranet). Does NOT affect any other outbound connections.
+      const agent = new https.Agent({ rejectUnauthorized: false });
+      const response = await fetch(url, { headers, ...(url.startsWith('https:') ? { dispatcher: undefined } : {}), agent } as any);
 
       if (!response.ok) {
         // If we get a 400 page error on page > 1, it means we hit the end of pages in WordPress pagination.

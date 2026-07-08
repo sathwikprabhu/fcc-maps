@@ -8,14 +8,31 @@ import { storage } from './services/storage';
 
 dotenv.config();
 
-// Bypass SSL/TLS certificate warnings (needed for CERN intranet endpoints)
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+// NOTE: TLS bypass was here — removed. Use per-request agent in scheduler instead.
 
 const app = express();
 const PORT = process.env.PORT || 5050;
 
-app.use(cors());
-app.use(express.json());
+// Restrict CORS to same-origin and known embed origins
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(',')
+  : [];
+
+app.use(cors({
+  origin: (origin, callback) => {
+    // Allow requests with no origin (server-to-server, curl, etc.)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.length === 0 || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    callback(new Error('Not allowed by CORS'));
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type'],
+}));
+
+// Tight body size for API requests; upload route has its own higher limit
+app.use(express.json({ limit: '100kb' }));
 
 // Log incoming API requests in storage for tracking
 app.use('/api', (req, res, next) => {

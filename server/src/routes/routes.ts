@@ -1,4 +1,4 @@
-import { Router, Request, Response } from 'express';
+import express, { Router, Request, Response } from 'express';
 import { storage } from '../services/storage';
 import { scheduler } from '../scheduler/scheduler';
 import { Settings } from '../types';
@@ -7,11 +7,13 @@ import path from 'path';
 
 const router = Router();
 
-// GET /api/settings
+// GET /api/settings — strips sensitive credentials from response
 router.get('/settings', (req: Request, res: Response) => {
   try {
     const settings = storage.getSettings();
-    res.json(settings);
+    // Never expose credentials over the wire
+    const { password: _pw, username: _un, ...safeSettings } = settings as any;
+    res.json(safeSettings);
   } catch (error) {
     res.status(500).json({ error: 'Failed to retrieve settings' });
   }
@@ -50,15 +52,41 @@ router.put('/settings', (req: Request, res: Response) => {
 });
 
 // POST /api/upload-logo
-router.post('/upload-logo', (req: Request, res: Response) => {
+router.post('/upload-logo', express.json({ limit: '5mb' }), (req: Request, res: Response) => {
   try {
     const { filename, base64 } = req.body;
     if (!filename || !base64) {
       return res.status(400).json({ error: 'Filename and base64 data are required' });
     }
 
+    // Validate MIME type — only allow safe image formats
+    const allowedMimeTypes = ['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/svg+xml'];
+    const mimeMatch = base64.match(/^data:([a-zA-Z0-9+/]+\/[a-zA-Z0-9+/\-]+);base64,/);
+    if (!mimeMatch || !allowedMimeTypes.includes(mimeMatch[1])) {
+      return res.status(400).json({ error: 'Invalid file type. Only PNG, JPEG, GIF, WebP, and SVG are allowed.' });
+    }
+
+    // Enforce safe extension matching the MIME type
+    const mimeToExt: Record<string, string[]> = {
+      'image/png': ['.png'],
+      'image/jpeg': ['.jpg', '.jpeg'],
+      'image/gif': ['.gif'],
+      'image/webp': ['.webp'],
+      'image/svg+xml': ['.svg'],
+    };
+    const ext = path.extname(filename).toLowerCase();
+    const allowedExts = mimeToExt[mimeMatch[1]] || [];
+    if (!allowedExts.includes(ext)) {
+      return res.status(400).json({ error: `File extension '${ext}' does not match content type '${mimeMatch[1]}'.` });
+    }
+
     const base64Data = base64.replace(/^data:image\/\w+;base64,/, "");
     const buffer = Buffer.from(base64Data, 'base64');
+
+    // Reject suspiciously large decoded files (>3 MB)
+    if (buffer.length > 3 * 1024 * 1024) {
+      return res.status(400).json({ error: 'File too large. Maximum size is 3 MB.' });
+    }
 
     const uploadsDir = path.join(__dirname, '../../storage/uploads');
     if (!fs.existsSync(uploadsDir)) {
@@ -67,6 +95,13 @@ router.post('/upload-logo', (req: Request, res: Response) => {
 
     const safeFilename = filename.replace(/[^a-zA-Z0-9.\-_]/g, '_');
     const filePath = path.join(uploadsDir, safeFilename);
+
+    // Prevent path traversal
+    const resolvedPath = path.resolve(filePath);
+    const resolvedDir = path.resolve(uploadsDir);
+    if (!resolvedPath.startsWith(resolvedDir + path.sep)) {
+      return res.status(400).json({ error: 'Invalid filename.' });
+    }
 
     fs.writeFileSync(filePath, buffer);
     res.json({ url: `/uploads/${safeFilename}` });
@@ -162,8 +197,9 @@ router.delete('/logs', (req: Request, res: Response) => {
   }
 });
 
-// GET /api/mock-wp (Mock WordPress JSON API endpoint)
-router.get('/mock-wp', (req: Request, res: Response) => {
+// GET /api/mock-wp — only available outside production
+if (process.env.NODE_ENV !== 'production') {
+  router.get('/mock-wp', (req: Request, res: Response) => {
   const mockPosts = [
     {
       id: 1,
@@ -263,7 +299,7 @@ router.get('/mock-wp', (req: Request, res: Response) => {
     }
   ];
 
-  res.json(mockPosts);
-});
+  });
+}
 
 export default router;

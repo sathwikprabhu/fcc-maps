@@ -22,11 +22,7 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     }
     
-    #map {
-      width: 100vw;
-      height: 100vh;
-      background: #f4f4f5;
-    }
+
 
     /* Loader styling - ShadCN-inspired */
     #loader {
@@ -190,6 +186,176 @@
       color: #18181b !important;
       background: #f4f4f5 !important;
     }
+
+    /* App Layout */
+    #app-container {
+      display: flex;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      position: relative;
+    }
+
+    #sidebar {
+      width: 320px;
+      min-width: 320px;
+      background: #ffffff;
+      border-right: 1px solid #e4e4e7;
+      display: flex;
+      flex-direction: column;
+      transition: margin-left 0.3s ease, transform 0.3s ease;
+      z-index: 1001;
+      box-shadow: 1px 0 5px rgba(0,0,0,0.05);
+    }
+
+    #sidebar.collapsed {
+      margin-left: -320px;
+    }
+
+
+
+    #sidebar-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+    }
+
+    /* Map container */
+    #map-container {
+      flex: 1;
+      position: relative;
+      height: 100%;
+    }
+
+    #map {
+      width: 100%;
+      height: 100%;
+      background: #f4f4f5;
+    }
+
+    #sidebar-toggle {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      z-index: 1002;
+      background: #ffffff;
+      border: 1px solid #e4e4e7;
+      border-radius: 6px;
+      padding: 8px;
+      cursor: pointer;
+      box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #09090b;
+      transition: background-color 0.2s;
+    }
+
+    #sidebar-toggle:hover {
+      background-color: #f4f4f5;
+    }
+
+    /* Shadcn style collapsible */
+    .country-group {
+      margin-bottom: 8px;
+      overflow: hidden;
+    }
+
+    .country-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 16px;
+      background: transparent;
+      cursor: pointer;
+      font-weight: 500;
+      font-size: 0.875rem;
+      color: #09090b;
+      transition: opacity 0.2s;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .country-header:hover {
+      opacity: 0.8;
+    }
+
+    .country-header::after {
+      content: "";
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+      background-size: contain;
+      transition: transform 0.2s;
+    }
+
+    .country-group.open .country-header::after {
+      transform: rotate(180deg);
+    }
+
+    .country-items {
+      display: none;
+      background: transparent;
+      padding: 4px 0;
+    }
+
+    .country-group.open .country-items {
+      display: block;
+    }
+
+    .institute-item {
+      padding: 8px 16px 8px 32px;
+      font-size: 0.875rem;
+      color: #71717a;
+      cursor: pointer;
+      transition: background-color 0.2s, color 0.2s;
+      position: relative;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .institute-item::before {
+      content: "";
+      position: absolute;
+      left: 16px;
+      top: 0;
+      bottom: 0;
+      width: 1px;
+      background-color: #e4e4e7;
+    }
+
+    .institute-item::after {
+      content: "";
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      width: 8px;
+      height: 1px;
+      background-color: #e4e4e7;
+    }
+
+    .institute-item:last-child::before {
+      bottom: 50%;
+    }
+
+    .institute-item:hover {
+      background: #f4f4f5;
+      color: #09090b;
+    }
+
+    @media (max-width: 768px) {
+      #sidebar {
+        width: 280px;
+        min-width: 280px;
+      }
+      
+      #sidebar.collapsed {
+        margin-left: -280px;
+      }
+    }
+
   </style>
 </head>
 <body>
@@ -199,7 +365,20 @@
     <div class="loader-text">Loading map markers...</div>
   </div>
 
-  <div id="map"></div>
+
+  <div id="app-container">
+    <div id="sidebar" class="collapsed">
+      <div id="sidebar-content"></div>
+    </div>
+    
+    <div id="map-container">
+      <button id="sidebar-toggle" title="Toggle Sidebar">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line></svg>
+      </button>
+      <div id="map"></div>
+    </div>
+  </div>
+
 
   <!-- Leaflet JS -->
   <script src="vendor/leaflet/leaflet.js"></script>
@@ -221,7 +400,7 @@
       
       let defaultLat = 46.23307;
       let defaultLng = 6.05551;
-      let defaultZoom = 8;
+      let defaultZoom = 3;
       let enableClustering = true;
       let baseMapUrl = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
       
@@ -283,11 +462,35 @@
       const initialZoom = paramZoom ? parseInt(paramZoom, 10) : defaultZoom;
       const hasParamCoordinates = (paramLat !== null && paramLng !== null);
 
+      // Security: escape HTML special chars to prevent XSS from marker data
+      function escapeHtml(str) {
+        if (!str) return '';
+        return String(str)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#039;');
+      }
+
+      // Security: only allow http(s) URLs in popup links
+      function safeUrl(url) {
+        try {
+          const u = new URL(url);
+          if (u.protocol === 'http:' || u.protocol === 'https:') return url;
+        } catch (_) {}
+        return '#';
+      }
+
       // Initialize map
       const map = L.map('map', {
-        zoomControl: true,
+        zoomControl: false,
         attributionControl: true
       }).setView([initialLat, initialLng], initialZoom);
+      
+      L.control.zoom({
+        position: 'bottomright'
+      }).addTo(map);
 
       // Add modern styled tile layer
       let attribution = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
@@ -336,6 +539,28 @@
 
         const bounds = L.latLngBounds();
 
+        // Group by country for the sidebar
+        const sidebarContent = document.getElementById('sidebar-content');
+        const groups = {};
+        
+        // Setup toggle handlers
+        const sidebar = document.getElementById('sidebar');
+        const toggleBtn = document.getElementById('sidebar-toggle');
+        
+        // Initial state logic based on screen width
+        const isMobile = window.innerWidth <= 768;
+        if (!isMobile) {
+          sidebar.classList.remove('collapsed');
+        }
+
+        toggleBtn.addEventListener('click', () => {
+          sidebar.classList.toggle('collapsed');
+        });
+
+        // Store references to markers to open popups
+        const markerRefs = {};
+
+
         markersData.forEach(item => {
           const lat = parseFloat(item.latitude);
           const lng = parseFloat(item.longitude);
@@ -348,30 +573,30 @@
           // Build popup HTML
           let imageHtml = '';
           if (item.imageUrl) {
-            imageHtml = `<div class="popup-image-container" style="background-image: url('${item.imageUrl}')"></div>`;
+            imageHtml = `<div class="popup-image-container" style="background-image: url('${escapeHtml(item.imageUrl)')"></div>`;
           }
 
           let badgeHtml = '';
           if (item.category) {
             const catColor = colorConfig.categories[item.category];
-            const badgeStyle = catColor ? `style="background-color: ${catColor}15; color: ${catColor}; border-color: ${catColor}30;"` : '';
-            badgeHtml += `<span class="popup-badge category" ${badgeStyle}>${item.category}</span>`;
+            const badgeStyle = catColor ? `style="background-color: ${escapeHtml(catColor)}15; color: ${escapeHtml(catColor)}; border-color: ${escapeHtml(catColor)}30;"` : '';
+            badgeHtml += `<span class="popup-badge category" ${badgeStyle}>${escapeHtml(item.category)}</span>`;
           }
 
           if (item.tags && Array.isArray(item.tags) && item.tags.length > 0) {
             item.tags.forEach(t => {
               const tagColor = colorConfig.tags[t];
-              const tagStyle = tagColor ? `style="background-color: ${tagColor}15; color: ${tagColor}; border-color: ${tagColor}30;"` : '';
-              badgeHtml += `<span class="popup-badge" ${tagStyle}>${t}</span>`;
+              const tagStyle = tagColor ? `style="background-color: ${escapeHtml(tagColor)}15; color: ${escapeHtml(tagColor)}; border-color: ${escapeHtml(tagColor)}30;"` : '';
+              badgeHtml += `<span class="popup-badge" ${tagStyle}>${escapeHtml(t)}</span>`;
             });
           }
 
           const popupContent = `
             ${imageHtml}
             <div class="popup-body">
-              <h3 class="popup-title">${item.title}</h3>
+              <h3 class="popup-title">${escapeHtml(item.title)}</h3>
               ${badgeHtml ? `<div class="popup-meta">${badgeHtml}</div>` : ''}
-              <a href="${item.url}" target="_blank" class="popup-link-btn">
+              <a href="${safeUrl(item.url)}" target="_blank" rel="noopener noreferrer" class="popup-link-btn">
                 Visit Website
                 <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="arrow-icon"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg>
               </a>
@@ -389,16 +614,73 @@
             markerOptions.icon = createMarkerIcon(catColor);
           }
 
+
           const marker = L.marker(latLng, markerOptions).bindPopup(popupContent, {
             className: 'custom-popup',
             maxWidth: 280,
             minWidth: 280
           });
 
+          markerRefs[item.id || item.title] = { marker, latLng };
+
+          const country = (item.country && item.country !== 'Unknown') ? item.country : (item.category || 'Other');
+          if (!groups[country]) groups[country] = [];
+          groups[country].push(item);
+
+
           markerGroup.addLayer(marker);
         });
 
         map.addLayer(markerGroup);
+
+
+        // Render sidebar items
+        Object.keys(groups).sort().forEach(country => {
+          const groupDiv = document.createElement('div');
+          groupDiv.className = 'country-group';
+          
+          const headerDiv = document.createElement('div');
+          headerDiv.className = 'country-header';
+          headerDiv.innerText = country;
+          headerDiv.onclick = () => {
+            groupDiv.classList.toggle('open');
+          };
+          
+          const itemsDiv = document.createElement('div');
+          itemsDiv.className = 'country-items';
+          
+          groups[country].sort((a,b) => a.title.localeCompare(b.title)).forEach(item => {
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'institute-item';
+            itemDiv.innerText = item.title;
+            itemDiv.title = item.title; // For tooltip
+            itemDiv.onclick = () => {
+              const ref = markerRefs[item.id || item.title];
+              if (ref) {
+                const zoomAndOpen = () => {
+                  map.setView(ref.latLng, 5, { animate: true });
+                  setTimeout(() => ref.marker.openPopup(), 200); // slight delay for smooth animation
+                };
+
+                if (enableClustering && typeof markerGroup.zoomToShowLayer === 'function') {
+                  markerGroup.zoomToShowLayer(ref.marker, zoomAndOpen);
+                } else {
+                  zoomAndOpen();
+                }
+
+                if (window.innerWidth <= 768) {
+                  sidebar.classList.add('collapsed');
+                }
+              }
+            };
+            itemsDiv.appendChild(itemDiv);
+          });
+          
+          groupDiv.appendChild(headerDiv);
+          groupDiv.appendChild(itemsDiv);
+          sidebarContent.appendChild(groupDiv);
+        });
+
 
         // Autofit map bounds if coordinate parameters weren't explicitly provided
         if (!hasParamCoordinates && markersData.length > 0) {
