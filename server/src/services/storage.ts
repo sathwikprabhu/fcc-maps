@@ -32,6 +32,7 @@ const DEFAULT_STATUS: SyncStatus = {
   lastError: null,
   stats: {
     markerCount: 0,
+    allPostsCount: 0,
     invalidPostsCount: 0,
     duplicateCoordinatesCount: 0,
     jsonFileSize: 0,

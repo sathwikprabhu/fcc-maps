@@ -28,6 +28,7 @@ export interface Settings {
 
 export interface SyncStats {
   markerCount: number;
+  allPostsCount: number;
   invalidPostsCount: number;
   duplicateCoordinatesCount: number;
   jsonFileSize: number;

@@ -178,38 +178,10 @@ export class SchedulerService {
       const coordSet = new Set<string>();
 
       for (const post of allPosts) {
-        if (!post.id || !post.title?.rendered || !post.excerpt?.rendered) {
+        if (!post.id || !post.title?.rendered) {
           invalidPostsCount++;
           continue;
         }
-
-        const coords = this.parseCoordinates(post.excerpt.rendered);
-        if (!coords) {
-          invalidPostsCount++;
-          storage.addLog('warn', `Validation Skip: Post ID ${post.id} ("${post.title.rendered}") excerpt contains no coordinates.`, `Excerpt: ${post.excerpt.rendered}`);
-          continue;
-        }
-
-        const { lat, lng } = coords;
-
-        // Validate coordinate bounds
-        if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
-          invalidPostsCount++;
-          storage.addLog('warn', `Validation Skip: Post ID ${post.id} ("${post.title.rendered}") coordinates out of bounds.`, `Coords: ${lat}, ${lng}`);
-          continue;
-        }
-
-        // Handle duplicates
-        const coordKey = `${lat.toFixed(5)},${lng.toFixed(5)}`;
-        if (coordSet.has(coordKey)) {
-          duplicateCoordinatesCount++;
-          if (!settings.enableClustering) {
-            // If clustering is NOT enabled, ignore duplicate coordinates to prevent overlapping markers
-            storage.addLog('warn', `Validation Skip: Duplicate coordinates for Post ID ${post.id} ("${post.title.rendered}")`, `Coords: ${lat}, ${lng}`);
-            continue;
-          }
-        }
-        coordSet.add(coordKey);
 
         // Extract metadata: category, country, featured image
         let category = 'Uncategorized';
@@ -217,7 +189,6 @@ export class SchedulerService {
         const tags: string[] = [];
         let imageUrl = '';
 
-        // Extract embedded terms if available
         if (post._embedded && post._embedded['wp:term']) {
           const termsList: any[][] = post._embedded['wp:term'];
           for (const terms of termsList) {
@@ -233,25 +204,58 @@ export class SchedulerService {
           }
         }
 
-        // Fallback for featured image (standard media query embed path)
         if (post._embedded && post._embedded['wp:featuredmedia'] && post._embedded['wp:featuredmedia'][0]) {
           imageUrl = post._embedded['wp:featuredmedia'][0].source_url || '';
         }
 
-        // Clean link to point to original WordPress page, fallback if website-url tag not found
         let url = post.link || '';
         if (post.content && post.content.rendered) {
           const extractedUrl = this.parseWebsiteUrl(post.content.rendered);
-          if (extractedUrl) {
-            url = extractedUrl;
+          if (extractedUrl) url = extractedUrl;
+        }
+
+        // Try to parse coordinates — posts without coords are still included
+        let lat: number | null = null;
+        let lng: number | null = null;
+        let hasCoordinates = false;
+
+        if (post.excerpt?.rendered) {
+          const coords = this.parseCoordinates(post.excerpt.rendered);
+          if (coords) {
+            const { lat: parsedLat, lng: parsedLng } = coords;
+            if (parsedLat >= -90 && parsedLat <= 90 && parsedLng >= -180 && parsedLng <= 180) {
+              lat = Number(parsedLat.toFixed(5));
+              lng = Number(parsedLng.toFixed(5));
+              hasCoordinates = true;
+
+              // Handle duplicate coordinates
+              const coordKey = `${lat},${lng}`;
+              if (coordSet.has(coordKey)) {
+                duplicateCoordinatesCount++;
+                if (!settings.enableClustering) {
+                  storage.addLog('warn', `Validation Skip: Duplicate coordinates for Post ID ${post.id} ("${post.title.rendered}")`, `Coords: ${lat}, ${lng}`);
+                  hasCoordinates = false; // exclude from map but still include in CSV
+                }
+              }
+              if (hasCoordinates) coordSet.add(coordKey);
+            } else {
+              invalidPostsCount++;
+              storage.addLog('warn', `Post ID ${post.id} ("${post.title.rendered}") coordinates out of bounds.`, `Coords: ${parsedLat}, ${parsedLng}`);
+            }
+          } else {
+            invalidPostsCount++;
+            storage.addLog('warn', `Post ID ${post.id} ("${post.title.rendered}") has no coordinates — included in export only.`);
           }
+        } else {
+          invalidPostsCount++;
         }
 
         markers.push({
           id: post.id,
           title: post.title.rendered,
-          latitude: Number(lat.toFixed(5)),
-          longitude: Number(lng.toFixed(5)),
+          latitude: lat,
+          longitude: lng,
+          hasCoordinates,
           url,
           category,
           country,
@@ -264,15 +268,17 @@ export class SchedulerService {
       if (!manual && hash === this.lastHash && storage.getMarkersSize() > 0) {
         storage.addLog('info', 'No content changes detected. Skip regenerating markers.json.');
       } else {
-        // Content changed, write markers.json
+        // Content changed, write markers.json (all posts)
         const sizeBytes = storage.saveMarkers(markers);
         this.lastHash = hash;
-        storage.addLog('info', `Successfully regenerated markers.json with ${markers.length} markers (${(sizeBytes / 1024).toFixed(2)} KB)`);
+        const withCoords = markers.filter(m => m.hasCoordinates).length;
+        storage.addLog('info', `Successfully regenerated markers.json with ${markers.length} total entries (${withCoords} with coordinates, ${(sizeBytes / 1024).toFixed(2)} KB)`);
       }
 
       // Update sync statistics
       const finalStats: SyncStats = {
-        markerCount: markers.length,
+        markerCount: markers.filter(m => m.hasCoordinates).length,
+        allPostsCount: markers.length,
         invalidPostsCount,
         duplicateCoordinatesCount,
         jsonFileSize: storage.getMarkersSize(),
@@ -282,7 +288,7 @@ export class SchedulerService {
       status.status = 'idle';
       status.lastError = null;
       status.stats = finalStats;
-      (status as any).apiHash = this.lastHash; // persist the hash in status JSON
+      (status as any).apiHash = this.lastHash;
 
       storage.saveStatus(status);
       storage.addLog('info', 'Sync completed successfully');

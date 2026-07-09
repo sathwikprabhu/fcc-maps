@@ -16,6 +16,7 @@ import {
   Layers,
   Map as MapIcon,
   Sliders,
+  Download,
 } from 'lucide-react';
 import type { Settings, SyncStatus, LogEntry } from './types';
 
@@ -593,7 +594,12 @@ export default function App() {
                   </div>
                   <Separator />
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Invalid coords</span>
+                    <span className="text-muted-foreground">Total posts</span>
+                    <span className="font-medium">{status?.stats.allPostsCount ?? 0}</span>
+                  </div>
+                  <Separator />
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Missing coords</span>
                     <span className="font-medium">{status?.stats.invalidPostsCount ?? 0}</span>
                   </div>
                   <Separator />
@@ -613,6 +619,16 @@ export default function App() {
                   >
                     <RefreshCw className={`h-4 w-4 mr-2 ${status?.status === 'syncing' || syncingLocal ? 'animate-spin' : ''}`} />
                     Sync Now
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    asChild
+                  >
+                    <a href="/api/export-csv" download>
+                      <Download className="h-4 w-4 mr-2" />
+                      Export CSV
+                    </a>
                   </Button>
                 </CardContent>
               </Card>

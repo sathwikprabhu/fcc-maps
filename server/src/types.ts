@@ -1,8 +1,9 @@
 export interface Marker {
   id: number;
   title: string;
-  latitude: number;
-  longitude: number;
+  latitude: number | null;
+  longitude: number | null;
+  hasCoordinates: boolean;
   url: string;
   category?: string;
   country?: string;
@@ -28,6 +29,7 @@ export interface Settings {
 
 export interface SyncStats {
   markerCount: number;
+  allPostsCount: number;
   invalidPostsCount: number;
   duplicateCoordinatesCount: number;
   jsonFileSize: number;

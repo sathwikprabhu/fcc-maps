@@ -345,6 +345,17 @@
       color: #09090b;
     }
 
+    .institute-item.no-coords {
+      opacity: 0.4;
+      cursor: default;
+      font-style: italic;
+    }
+
+    .institute-item.no-coords:hover {
+      background: transparent;
+      color: #71717a;
+    }
+
     @media (max-width: 768px) {
       #sidebar {
         width: 280px;
@@ -560,8 +571,10 @@
         // Store references to markers to open popups
         const markerRefs = {};
 
+        // Only markers with coordinates go on the map
+        const mapMarkers = markersData.filter(item => item.hasCoordinates === true || (item.latitude !== null && item.longitude !== null));
 
-        markersData.forEach(item => {
+        mapMarkers.forEach(item => {
           const lat = parseFloat(item.latitude);
           const lng = parseFloat(item.longitude);
           
@@ -623,16 +636,17 @@
 
           markerRefs[item.id || item.title] = { marker, latLng };
 
-          const country = (item.country && item.country !== 'Unknown') ? item.country : (item.category || 'Other');
-          if (!groups[country]) groups[country] = [];
-          groups[country].push(item);
-
-
           markerGroup.addLayer(marker);
         });
 
         map.addLayer(markerGroup);
 
+        // Build sidebar groups from ALL markers (including those without coordinates)
+        markersData.forEach(item => {
+          const country = (item.country && item.country !== 'Unknown') ? item.country : (item.category || 'Other');
+          if (!groups[country]) groups[country] = [];
+          groups[country].push(item);
+        });
 
         // Render sidebar items
         Object.keys(groups).sort().forEach(country => {
@@ -651,9 +665,10 @@
           
           groups[country].sort((a,b) => a.title.localeCompare(b.title)).forEach(item => {
             const itemDiv = document.createElement('div');
-            itemDiv.className = 'institute-item';
+            const hasCoords = item.hasCoordinates === true || (item.latitude !== null && item.longitude !== null);
+            itemDiv.className = 'institute-item' + (hasCoords ? '' : ' no-coords');
             itemDiv.innerText = item.title;
-            itemDiv.title = item.title; // For tooltip
+            itemDiv.title = hasCoords ? item.title : `${item.title} (no coordinates)`;
             itemDiv.onclick = () => {
               const ref = markerRefs[item.id || item.title];
               if (ref) {
@@ -672,6 +687,7 @@
                   sidebar.classList.add('collapsed');
                 }
               }
+              // If no coords, do nothing on click (cursor shows not-allowed via CSS)
             };
             itemsDiv.appendChild(itemDiv);
           });
@@ -682,8 +698,8 @@
         });
 
 
-        // Autofit map bounds if coordinate parameters weren't explicitly provided
-        if (!hasParamCoordinates && markersData.length > 0) {
+        // Autofit map bounds using only markers that have coordinates
+        if (!hasParamCoordinates && mapMarkers.length > 0) {
           map.fitBounds(bounds, { padding: [50, 50] });
         }
 

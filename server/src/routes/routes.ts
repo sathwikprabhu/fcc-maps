@@ -197,6 +197,49 @@ router.delete('/logs', (req: Request, res: Response) => {
   }
 });
 
+// GET /api/export-csv — Download all markers as a CSV (including entries without coordinates)
+router.get('/export-csv', (req: Request, res: Response) => {
+  try {
+    const markers = storage.getParsedMarkers();
+
+    if (markers.length === 0) {
+      return res.status(404).json({ error: 'No marker data available. Run a sync first.' });
+    }
+
+    // CSV helper — wrap value in quotes and escape any inner quotes
+    const csvCell = (val: any): string => {
+      if (val === null || val === undefined) return '';
+      const str = String(val).replace(/"/g, '""');
+      return `"${str}"`;
+    };
+
+    const headers = ['ID', 'Title', 'Category', 'Country', 'Tags', 'Latitude', 'Longitude', 'Has Coordinates', 'URL', 'Image URL'];
+
+    const rows = markers.map(m => [
+      csvCell(m.id),
+      csvCell(m.title),
+      csvCell(m.category || ''),
+      csvCell(m.country || ''),
+      csvCell(Array.isArray(m.tags) ? m.tags.join('; ') : ''),
+      csvCell(m.latitude !== null ? m.latitude : ''),
+      csvCell(m.longitude !== null ? m.longitude : ''),
+      csvCell(m.hasCoordinates ? 'Yes' : 'No'),
+      csvCell(m.url || ''),
+      csvCell(m.imageUrl || ''),
+    ].join(','));
+
+    const csv = [headers.join(','), ...rows].join('\r\n');
+
+    const filename = `fcc-maps-export-${new Date().toISOString().slice(0, 10)}.csv`;
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    // BOM for Excel UTF-8 compatibility
+    res.send('\uFEFF' + csv);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to generate CSV export' });
+  }
+});
+
 // GET /api/mock-wp — only available outside production
 if (process.env.NODE_ENV !== 'production') {
   router.get('/mock-wp', (req: Request, res: Response) => {
