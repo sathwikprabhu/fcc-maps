@@ -12,6 +12,7 @@ public/markers.json
 # Local configurations & data storage
 server/storage/
 !server/storage/settings.json.example
+server/storage/config/
 .env
 .env.*
 

@@ -60,13 +60,10 @@ app.use('/api', apiRouter);
 const publicPath = path.join(__dirname, '../../public');
 app.use(express.static(publicPath));
 
-// Serve ONLY markers.json and uploads/ from storage — never expose settings/logs/status/colors
+// Serve ONLY markers.json and uploads/ from storage root.
+// Sensitive files (settings, logs, status, colors) live in storage/config/
+// which is a private subdirectory that is never served here.
 const storagePath = path.join(__dirname, '../storage');
-
-// Explicitly block sensitive files
-app.get(['/settings.json', '/status.json', '/logs.json', '/colors.json'], (req, res) => {
-  res.status(403).json({ error: 'Forbidden' });
-});
 
 // Only serve markers.json publicly
 app.get('/markers.json', (req, res) => {

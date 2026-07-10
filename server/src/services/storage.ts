@@ -2,11 +2,15 @@ import fs from 'fs';
 import path from 'path';
 import { Settings, SyncStatus, LogEntry, Marker } from '../types';
 
-const STORAGE_DIR = path.join(__dirname, '../../storage');
-const SETTINGS_PATH = path.join(STORAGE_DIR, 'settings.json');
-const STATUS_PATH = path.join(STORAGE_DIR, 'status.json');
-const LOGS_PATH = path.join(STORAGE_DIR, 'logs.json');
+// Private config — never under a publicly served directory
+const CONFIG_DIR = path.join(__dirname, '../../storage/config');
+const SETTINGS_PATH = path.join(CONFIG_DIR, 'settings.json');
+const STATUS_PATH = path.join(CONFIG_DIR, 'status.json');
+const LOGS_PATH = path.join(CONFIG_DIR, 'logs.json');
+const COLORS_PATH = path.join(CONFIG_DIR, 'colors.json');
 
+// Public data — served statically (markers + uploads)
+const STORAGE_DIR = path.join(__dirname, '../../storage');
 const MARKERS_PATH = path.join(STORAGE_DIR, 'markers.json');
 
 const DEFAULT_SETTINGS: Settings = {
@@ -47,7 +51,8 @@ function ensureDirExists(dirPath: string) {
 
 export class StorageService {
   constructor() {
-    ensureDirExists(STORAGE_DIR);
+    ensureDirExists(CONFIG_DIR);   // private config dir
+    ensureDirExists(STORAGE_DIR);  // public data dir
   }
 
   getSettings(): Settings {
@@ -152,7 +157,6 @@ export class StorageService {
   }
 
   getColors(): { categories: Record<string, string>; tags: Record<string, string> } {
-    const COLORS_PATH = path.join(STORAGE_DIR, 'colors.json');
     try {
       if (fs.existsSync(COLORS_PATH)) {
         return JSON.parse(fs.readFileSync(COLORS_PATH, 'utf-8'));
@@ -164,7 +168,6 @@ export class StorageService {
   }
 
   saveColors(colors: { categories: Record<string, string>; tags: Record<string, string> }): void {
-    const COLORS_PATH = path.join(STORAGE_DIR, 'colors.json');
     try {
       fs.writeFileSync(COLORS_PATH, JSON.stringify(colors, null, 2), 'utf-8');
     } catch (error) {

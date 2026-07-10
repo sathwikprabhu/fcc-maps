@@ -23,11 +23,15 @@ export NODE_ENV=development
 npm run build
 
 echo "---> Setting directory permissions for runtime storage..."
-# Ensure the storage directory exists
-mkdir -p /opt/app-root/src/server/storage
+
+# Public data dir (markers.json, uploads/)
+mkdir -p /opt/app-root/src/server/storage/uploads
+
+# Private config dir (settings, logs, status, colors) — never served publicly
+mkdir -p /opt/app-root/src/server/storage/config
 
 # OpenShift runs containers with a random UID in group 0.
-# We must give group write permissions to the storage directory.
+# We must give group write permissions to both directories.
 chown -R 1001:0 /opt/app-root/src/server/storage
 chmod -R g+rwx /opt/app-root/src/server/storage
 
