@@ -1029,68 +1029,92 @@ export default function App() {
                             </div>
                           ) : (
                             // Show credential input fields (either no creds saved, or user clicked Reconfigure)
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                              <div className="space-y-2">
-                                <Label htmlFor="username">Username</Label>
-                                <Input
-                                  id="username"
-                                  type="text"
-                                  required={formSettings.authEnabled}
-                                  placeholder="admin"
-                                  value={formSettings.username || ''}
-                                  onChange={(e) => setFormSettings({ ...formSettings, username: e.target.value })}
-                                />
+                            <div className="space-y-3">
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                  <Label htmlFor="username">Username</Label>
+                                  <Input
+                                    id="username"
+                                    type="text"
+                                    required={formSettings.authEnabled}
+                                    placeholder="admin"
+                                    value={formSettings.username || ''}
+                                    onChange={(e) => setFormSettings({ ...formSettings, username: e.target.value })}
+                                  />
+                                </div>
+                                <div className="space-y-2">
+                                  <Label htmlFor="password">Application Password</Label>
+                                  <Input
+                                    id="password"
+                                    type="password"
+                                    required={formSettings.authEnabled}
+                                    placeholder="xxxx xxxx xxxx xxxx"
+                                    value={formSettings.password || ''}
+                                    onChange={(e) => setFormSettings({ ...formSettings, password: e.target.value })}
+                                  />
+                                </div>
                               </div>
-                              <div className="space-y-2">
-                                <Label htmlFor="password">Application Password</Label>
-                                <Input
-                                  id="password"
-                                  type="password"
-                                  required={formSettings.authEnabled}
-                                  placeholder="xxxx xxxx xxxx xxxx"
-                                  value={formSettings.password || ''}
-                                  onChange={(e) => setFormSettings({ ...formSettings, password: e.target.value })}
-                                />
-                              </div>
-                              {showCredentialFields && (
-                                <div className="sm:col-span-2">
+
+                              {/* Test Connection + Save Auth in same row */}
+                              <div className="flex items-center gap-2">
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={handleTestConnection}
+                                  disabled={testingConnection || !formSettings.wpApiUrl}
+                                >
+                                  {testingConnection ? 'Testing…' : 'Test Connection'}
+                                </Button>
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  disabled={!formSettings.username || !formSettings.password}
+                                  onClick={async () => {
+                                    const res = await fetch('/api/settings', {
+                                      method: 'PUT',
+                                      headers: { 'Content-Type': 'application/json' },
+                                      body: JSON.stringify(formSettings),
+                                    });
+                                    const data = await res.json();
+                                    if (res.ok) {
+                                      setSettings(prev => ({ ...prev, ...(data.settings || {}) }));
+                                      setFormSettings(prev => ({ ...prev, ...(data.settings || {}), username: '', password: '' }));
+                                      setShowCredentialFields(false);
+                                      setSaveStatus({ success: true, message: 'Credentials saved.' });
+                                    } else {
+                                      setSaveStatus({ success: false, message: data.error || 'Failed to save credentials.' });
+                                    }
+                                  }}
+                                >
+                                  Save Auth
+                                </Button>
+                                {showCredentialFields && (
                                   <button
                                     type="button"
-                                    className="text-xs text-muted-foreground underline underline-offset-2"
+                                    className="text-xs text-muted-foreground underline underline-offset-2 ml-auto"
                                     onClick={() => {
                                       setShowCredentialFields(false);
                                       setFormSettings(prev => ({ ...prev, username: '', password: '' }));
                                     }}
                                   >
-                                    Cancel — keep existing credentials
+                                    Cancel
                                   </button>
-                                </div>
+                                )}
+                              </div>
+
+                              {testResult && (
+                                <Alert variant={testResult.success ? 'default' : 'destructive'}>
+                                  <AlertTitle>{testResult.success ? 'Connected' : 'Failed'}</AlertTitle>
+                                  <AlertDescription>{testResult.message}</AlertDescription>
+                                </Alert>
                               )}
                             </div>
                           )}
                         </div>
                       )}
 
-                      <Separator />
 
-                      {/* Connection Test integrated here */}
-                      <div className="pt-2 space-y-4">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          className="w-full"
-                          onClick={handleTestConnection}
-                          disabled={testingConnection || !formSettings.wpApiUrl}
-                        >
-                          {testingConnection ? 'Testing…' : 'Test connection'}
-                        </Button>
-                        {testResult && (
-                          <Alert variant={testResult.success ? 'default' : 'destructive'}>
-                            <AlertTitle>{testResult.success ? 'Connected' : 'Failed'}</AlertTitle>
-                            <AlertDescription>{testResult.message}</AlertDescription>
-                          </Alert>
-                        )}
-                      </div>
 
                     </CardContent>
                   </Card>
