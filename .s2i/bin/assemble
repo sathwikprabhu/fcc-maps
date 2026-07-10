@@ -22,4 +22,13 @@ export NODE_ENV=development
 # Build server (TypeScript) + admin (Vite)
 npm run build
 
+echo "---> Setting directory permissions for runtime storage..."
+# Ensure the storage directory exists
+mkdir -p /opt/app-root/src/server/storage
+
+# OpenShift runs containers with a random UID in group 0.
+# We must give group write permissions to the storage directory.
+chown -R 1001:0 /opt/app-root/src/server/storage
+chmod -R g+rwx /opt/app-root/src/server/storage
+
 echo "---> Build complete."
