@@ -195,6 +195,8 @@ export default function App() {
   const [colors, setColors] = useState<{ categories: Record<string, string>; tags: Record<string, string> }>({ categories: {}, tags: {} });
   const [colorsSaveStatus, setColorsSaveStatus] = useState<{ success?: boolean; message?: string } | null>(null);
   const [activeSection, setActiveSection] = useState<string>('branding');
+  // Controls the "Reconfigure" credentials panel
+  const [showCredentialFields, setShowCredentialFields] = useState<boolean>(false);
 
   useEffect(() => { 
     fetchData(); 
@@ -316,7 +318,9 @@ export default function App() {
       });
       const data = await res.json();
       if (res.ok) {
-        setSettings(formSettings);
+        setSettings({ ...formSettings, ...(data.settings || {}) });
+        setFormSettings(prev => ({ ...prev, ...(data.settings || {}), username: '', password: '' }));
+        setShowCredentialFields(false);
         setSaveStatus({ success: true, message: 'Configuration saved successfully.' });
         fetchStatusAndLogs();
       } else {
@@ -1003,29 +1007,67 @@ export default function App() {
                       </div>
 
                       {formSettings.authEnabled && (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pl-6">
-                          <div className="space-y-2">
-                            <Label htmlFor="username">Username</Label>
-                            <Input
-                              id="username"
-                              type="text"
-                              required={formSettings.authEnabled}
-                              placeholder="admin"
-                              value={formSettings.username || ''}
-                              onChange={(e) => setFormSettings({ ...formSettings, username: e.target.value })}
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="password">Application Password</Label>
-                            <Input
-                              id="password"
-                              type="password"
-                              required={formSettings.authEnabled}
-                              placeholder="xxxx xxxx xxxx xxxx"
-                              value={formSettings.password || ''}
-                              onChange={(e) => setFormSettings({ ...formSettings, password: e.target.value })}
-                            />
-                          </div>
+                        <div className="pl-6 space-y-3">
+                          {(formSettings as any).hasCredentials && !showCredentialFields ? (
+                            // Credentials already configured — show locked status + Reconfigure button
+                            <div className="flex items-center justify-between rounded-md border border-dashed px-3 py-2.5 bg-muted/40">
+                              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                <Lock className="h-3.5 w-3.5 text-green-600" />
+                                <span className="text-green-700 font-medium">Credentials configured</span>
+                              </div>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setShowCredentialFields(true);
+                                  setFormSettings({ ...formSettings, username: '', password: '' });
+                                }}
+                              >
+                                Reconfigure
+                              </Button>
+                            </div>
+                          ) : (
+                            // Show credential input fields (either no creds saved, or user clicked Reconfigure)
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                              <div className="space-y-2">
+                                <Label htmlFor="username">Username</Label>
+                                <Input
+                                  id="username"
+                                  type="text"
+                                  required={formSettings.authEnabled}
+                                  placeholder="admin"
+                                  value={formSettings.username || ''}
+                                  onChange={(e) => setFormSettings({ ...formSettings, username: e.target.value })}
+                                />
+                              </div>
+                              <div className="space-y-2">
+                                <Label htmlFor="password">Application Password</Label>
+                                <Input
+                                  id="password"
+                                  type="password"
+                                  required={formSettings.authEnabled}
+                                  placeholder="xxxx xxxx xxxx xxxx"
+                                  value={formSettings.password || ''}
+                                  onChange={(e) => setFormSettings({ ...formSettings, password: e.target.value })}
+                                />
+                              </div>
+                              {showCredentialFields && (
+                                <div className="sm:col-span-2">
+                                  <button
+                                    type="button"
+                                    className="text-xs text-muted-foreground underline underline-offset-2"
+                                    onClick={() => {
+                                      setShowCredentialFields(false);
+                                      setFormSettings(prev => ({ ...prev, username: '', password: '' }));
+                                    }}
+                                  >
+                                    Cancel — keep existing credentials
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          )}
                         </div>
                       )}
 

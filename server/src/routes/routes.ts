@@ -7,13 +7,16 @@ import path from 'path';
 
 const router = Router();
 
-// GET /api/settings — strips sensitive credentials from response
+// GET /api/settings — credentials are NEVER sent to the browser
+// The UI uses hasCredentials to know if auth is already configured
 router.get('/settings', (req: Request, res: Response) => {
   try {
     const settings = storage.getSettings();
-    // Never expose credentials over the wire
     const { password: _pw, username: _un, ...safeSettings } = settings as any;
-    res.json(safeSettings);
+    res.json({
+      ...safeSettings,
+      hasCredentials: !!(settings.username && settings.password),
+    });
   } catch (error) {
     res.status(500).json({ error: 'Failed to retrieve settings' });
   }
@@ -43,7 +46,13 @@ router.put('/settings', (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Sync interval cannot exceed 8760 hours (1 year)' });
     }
 
-    // Save settings
+    // Preserve existing credentials if the client didn't send new ones
+    // (credentials are never returned by GET, so empty = user didn't touch them)
+    if (!newSettings.username || !newSettings.password) {
+      const existing = storage.getSettings();
+      if (!newSettings.username) newSettings.username = existing.username;
+      if (!newSettings.password) newSettings.password = existing.password;
+    }
     storage.saveSettings(newSettings);
     
     // Reschedule jobs with new frequency
@@ -51,7 +60,10 @@ router.put('/settings', (req: Request, res: Response) => {
 
     // Never echo credentials back in response
     const { password: _pw, username: _un, ...safeSettings } = newSettings as any;
-    res.json({ message: 'Settings saved successfully', settings: safeSettings });
+    res.json({
+      message: 'Settings saved successfully',
+      settings: { ...safeSettings, hasCredentials: !!(_un && _pw) },
+    });
   } catch (error) {
     res.status(500).json({ error: 'Failed to save settings' });
   }
