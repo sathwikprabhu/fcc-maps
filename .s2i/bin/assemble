@@ -10,17 +10,28 @@ fi
 
 cd /opt/app-root/src
 
-echo "---> Installing dependencies and building..."
+echo "---> Installing admin dependencies..."
+npm install --prefix admin --production=false
 
-# Install root deps (including devDependencies like concurrently)
-npm install --production=false
+echo "---> Installing server dependencies..."
+npm install --prefix server --production=false
 
-# Also ensure sub-packages install devDependencies for building
-# We modify the root build script dynamically by telling npm not to prune devDependencies
-export NODE_ENV=development
+echo "---> Building server (TypeScript)..."
+npm run build --prefix server
 
-# Build server (TypeScript) + admin (Vite)
-npm run build
+echo "---> Building admin (Vite)..."
+npm run build --prefix admin
+
+echo "---> Verifying admin build output..."
+if [ -d "/opt/app-root/src/public/admin/assets" ]; then
+  echo "Admin assets found:"
+  ls -lh /opt/app-root/src/public/admin/assets/
+else
+  echo "ERROR: /opt/app-root/src/public/admin/assets does NOT exist after build!"
+  echo "Contents of /opt/app-root/src/public/:"
+  ls -la /opt/app-root/src/public/ || echo "(public/ directory missing)"
+  exit 1
+fi
 
 echo "---> Setting directory permissions for runtime storage..."
 

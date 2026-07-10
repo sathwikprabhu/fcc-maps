@@ -97,6 +97,16 @@ app.get('/admin/*', (req, res) => {
 const server = app.listen(Number(PORT), '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);
   storage.addLog('info', `Web server started on port ${PORT}`);
+
+  // Diagnostic: confirm admin assets are present in the container
+  const adminAssetsPath = path.join(publicPath, 'admin/assets');
+  if (fs.existsSync(adminAssetsPath)) {
+    const files = fs.readdirSync(adminAssetsPath);
+    console.log(`[OK] Admin assets found (${files.length} files): ${adminAssetsPath}`);
+  } else {
+    console.warn(`[WARN] Admin assets NOT found at: ${adminAssetsPath}`);
+    console.warn(`[WARN] publicPath resolves to: ${publicPath}`);
+  }
   
   // Start the background scheduler
   scheduler.start();
