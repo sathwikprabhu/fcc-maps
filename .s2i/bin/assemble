@@ -12,8 +12,12 @@ cd /opt/app-root/src
 
 echo "---> Installing dependencies and building..."
 
-# Install root deps
-npm install
+# Install root deps (including devDependencies like concurrently)
+npm install --production=false
+
+# Also ensure sub-packages install devDependencies for building
+# We modify the root build script dynamically by telling npm not to prune devDependencies
+export NODE_ENV=development
 
 # Build server (TypeScript) + admin (Vite)
 npm run build
