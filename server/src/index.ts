@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import path from 'path';
+import fs from 'fs';
 import dotenv from 'dotenv';
 import apiRouter from './routes/routes';
 import { scheduler } from './scheduler/scheduler';
@@ -67,17 +68,28 @@ const storagePath = path.join(__dirname, '../storage');
 
 // Only serve markers.json publicly
 app.get('/markers.json', (req, res) => {
-  res.sendFile(path.join(storagePath, 'markers.json'));
+  const markersFile = path.join(storagePath, 'markers.json');
+  if (!fs.existsSync(markersFile)) {
+    return res.json([]); // Return empty array before first sync
+  }
+  res.sendFile(markersFile);
 });
 
 // Only serve uploaded files (logos, favicons) publicly
 app.use('/uploads', express.static(path.join(storagePath, 'uploads')));
 
-// Fallback for SPA routing if admin dashboard is built into public/admin
+// Fallback for SPA routing — serve index.html for admin navigation routes only.
+// Asset requests (.js, .css, images etc.) are NOT caught here; they get a 404
+// rather than receiving HTML which breaks the browser's MIME type check.
 app.get('/admin', (req, res) => {
   res.redirect('/admin/');
 });
 app.get('/admin/*', (req, res) => {
+  const ext = path.extname(req.path);
+  // If the request has a file extension, it's an asset — don't serve index.html
+  if (ext && ext !== '.html') {
+    return res.status(404).send('Not found');
+  }
   res.sendFile(path.join(publicPath, 'admin/index.html'));
 });
 
