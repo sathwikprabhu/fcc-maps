@@ -18,10 +18,16 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(',')
   : [];
 
+const isProduction = process.env.NODE_ENV === 'production';
+
 app.use(cors({
   origin: (origin, callback) => {
     // Allow requests with no origin (server-to-server, curl, etc.)
     if (!origin) return callback(null, true);
+    // In production with no ALLOWED_ORIGINS set, deny all cross-origin requests
+    if (isProduction && allowedOrigins.length === 0) {
+      return callback(new Error('ALLOWED_ORIGINS not configured'));
+    }
     if (allowedOrigins.length === 0 || allowedOrigins.includes(origin)) {
       return callback(null, true);
     }

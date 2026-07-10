@@ -324,10 +324,12 @@ export class SchedulerService {
       // Request embedded fields (e.g. categories, media) to get images and terms in one call
       const url = `${settings.wpApiUrl}${separator}page=${page}&per_page=${perPage}&_embed=1`;
 
-      // Use a scoped agent that allows self-signed certs only for this endpoint
-      // (needed for CERN intranet). Does NOT affect any other outbound connections.
-      const agent = new https.Agent({ rejectUnauthorized: false });
-      const response = await fetch(url, { headers, ...(url.startsWith('https:') ? { dispatcher: undefined } : {}), agent } as any);
+      // Only bypass TLS cert validation if explicitly opted in via env var.
+      // This should ONLY be used for known self-signed cert environments (e.g. CERN intranet).
+      // NEVER set this in production unless you understand the MITM risk.
+      const allowSelfSigned = process.env.ALLOW_SELF_SIGNED_CERTS === 'true';
+      const agent = new https.Agent({ rejectUnauthorized: !allowSelfSigned });
+      const response = await fetch(url, { headers, agent } as any);
 
       if (!response.ok) {
         // If we get a 400 page error on page > 1, it means we hit the end of pages in WordPress pagination.

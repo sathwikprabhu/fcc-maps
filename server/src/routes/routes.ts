@@ -35,8 +35,12 @@ router.put('/settings', (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Invalid WordPress API URL format' });
     }
 
-    if (typeof newSettings.syncIntervalHours !== 'number' || newSettings.syncIntervalHours <= 0) {
-      return res.status(400).json({ error: 'Sync interval must be a positive number' });
+    if (typeof newSettings.syncIntervalHours !== 'number' || newSettings.syncIntervalHours < 1) {
+      return res.status(400).json({ error: 'Sync interval must be at least 1 hour' });
+    }
+
+    if (newSettings.syncIntervalHours > 8760) {
+      return res.status(400).json({ error: 'Sync interval cannot exceed 8760 hours (1 year)' });
     }
 
     // Save settings
@@ -45,7 +49,9 @@ router.put('/settings', (req: Request, res: Response) => {
     // Reschedule jobs with new frequency
     scheduler.reschedule();
 
-    res.json({ message: 'Settings saved successfully', settings: newSettings });
+    // Never echo credentials back in response
+    const { password: _pw, username: _un, ...safeSettings } = newSettings as any;
+    res.json({ message: 'Settings saved successfully', settings: safeSettings });
   } catch (error) {
     res.status(500).json({ error: 'Failed to save settings' });
   }
