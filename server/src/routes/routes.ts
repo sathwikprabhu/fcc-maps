@@ -213,13 +213,12 @@ router.get('/export-csv', (req: Request, res: Response) => {
       return `"${str}"`;
     };
 
-    const headers = ['ID', 'Title', 'Category', 'Country', 'Tags', 'Latitude', 'Longitude', 'Has Coordinates', 'URL', 'Image URL'];
+    const headers = ['ID', 'Title', 'Category', 'Tags', 'Latitude', 'Longitude', 'Has Coordinates', 'URL', 'Image URL'];
 
     const rows = markers.map(m => [
       csvCell(m.id),
       csvCell(m.title),
       csvCell(m.category || ''),
-      csvCell(m.country || ''),
       csvCell(Array.isArray(m.tags) ? m.tags.join('; ') : ''),
       csvCell(m.latitude !== null ? m.latitude : ''),
       csvCell(m.longitude !== null ? m.longitude : ''),

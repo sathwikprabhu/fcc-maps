@@ -1,19 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Interactive University Map</title>
-  
+
   <!-- Leaflet CSS -->
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css" />
-  
+
   <!-- MarkerCluster CSS -->
   <link rel="stylesheet" href="vendor/leaflet-markercluster/MarkerCluster.css" />
   <link rel="stylesheet" href="vendor/leaflet-markercluster/MarkerCluster.Default.css" />
-  
+
   <style>
-    body, html {
+    body,
+    html {
       margin: 0;
       padding: 0;
       width: 100%;
@@ -21,7 +23,7 @@
       overflow: hidden;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     }
-    
+
 
 
     /* Loader styling - ShadCN-inspired */
@@ -40,7 +42,7 @@
       align-items: center;
       transition: opacity 0.4s ease, visibility 0.4s;
     }
-    
+
     .spinner {
       width: 32px;
       height: 32px;
@@ -58,8 +60,13 @@
     }
 
     @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
     }
 
     /* Custom Popup Styling - ShadCN Card-inspired */
@@ -127,7 +134,7 @@
       border: 1px solid #e4e4e7;
       line-height: 1.2;
     }
-    
+
     .popup-badge.category {
       background: #f4f4f5;
       color: #18181b;
@@ -182,6 +189,7 @@
       box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
       transition: background-color 0.2s, color 0.2s;
     }
+
     .custom-popup .leaflet-popup-close-button:hover {
       color: #18181b !important;
       background: #f4f4f5 !important;
@@ -205,7 +213,7 @@
       flex-direction: column;
       transition: margin-left 0.3s ease, transform 0.3s ease;
       z-index: 1001;
-      box-shadow: 1px 0 5px rgba(0,0,0,0.05);
+      box-shadow: 1px 0 5px rgba(0, 0, 0, 0.05);
     }
 
     #sidebar.collapsed {
@@ -218,6 +226,36 @@
       flex: 1;
       overflow-y: auto;
       padding: 16px;
+    }
+
+    #sidebar-footer {
+      padding: 12px 16px;
+      border-top: 1px solid #e4e4e7;
+    }
+
+    #export-csv-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      max-width: 100%;
+      padding: 7px 12px;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      color: #71717a;
+      background: transparent;
+      border: 1px solid #e4e4e7;
+      border-radius: 6px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background-color 0.15s, color 0.15s, border-color 0.15s;
+      letter-spacing: 0.01em;
+    }
+
+    #export-csv-btn:hover {
+      background: #f4f4f5;
+      color: #18181b;
+      border-color: #d4d4d8;
     }
 
     /* Map container */
@@ -361,14 +399,14 @@
         width: 280px;
         min-width: 280px;
       }
-      
+
       #sidebar.collapsed {
         margin-left: -280px;
       }
     }
-
   </style>
 </head>
+
 <body>
 
   <div id="loader">
@@ -380,11 +418,26 @@
   <div id="app-container">
     <div id="sidebar" class="collapsed">
       <div id="sidebar-content"></div>
+      <div id="sidebar-footer">
+        <a id="export-csv-btn" href="/api/export-csv" download>
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="7 10 12 15 17 10" />
+            <line x1="12" y1="15" x2="12" y2="3" />
+          </svg>
+          Export CSV
+        </a>
+      </div>
     </div>
-    
+
     <div id="map-container">
       <button id="sidebar-toggle" title="Toggle Sidebar">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+          <line x1="9" y1="3" x2="9" y2="21"></line>
+        </svg>
       </button>
       <div id="map"></div>
     </div>
@@ -393,14 +446,14 @@
 
   <!-- Leaflet JS -->
   <script src="vendor/leaflet/leaflet.js"></script>
-  
+
   <!-- MarkerCluster JS -->
   <script src="vendor/leaflet-markercluster/leaflet.markercluster.js"></script>
 
   <script>
     document.addEventListener('DOMContentLoaded', async () => {
       const loader = document.getElementById('loader');
-      
+
       // Parse URL parameters
       const urlParams = new URLSearchParams(window.location.search);
       const paramLat = urlParams.get('lat');
@@ -408,13 +461,13 @@
       const paramZoom = urlParams.get('zoom');
       const isPreview = urlParams.get('preview') === '1';
       const paramBaseMapUrl = urlParams.get('baseMapUrl');
-      
+
       let defaultLat = 46.23307;
       let defaultLng = 6.05551;
       let defaultZoom = 3;
       let enableClustering = true;
       let baseMapUrl = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
-      
+
       // Try to fetch settings and colors from API
       let colorConfig = { categories: {}, tags: {} };
       try {
@@ -422,7 +475,7 @@
           fetch('/api/settings'),
           fetch('/api/colors')
         ]);
-        
+
         if (settingsRes.ok) {
           const settings = await settingsRes.json();
           if (settings.defaultLat) defaultLat = parseFloat(settings.defaultLat);
@@ -431,7 +484,7 @@
           if (settings.enableClustering !== undefined) enableClustering = settings.enableClustering;
           if (settings.baseMapUrl) baseMapUrl = settings.baseMapUrl;
           if (paramBaseMapUrl) baseMapUrl = paramBaseMapUrl;
-          
+
           if (settings.appTitle) {
             document.title = settings.appTitle;
           }
@@ -489,16 +542,17 @@
         try {
           const u = new URL(url);
           if (u.protocol === 'http:' || u.protocol === 'https:') return url;
-        } catch (_) {}
+        } catch (_) { }
         return '#';
       }
 
       // Initialize map
       const map = L.map('map', {
         zoomControl: false,
-        attributionControl: true
+        attributionControl: true,
+        minZoom: 3
       }).setView([initialLat, initialLng], initialZoom);
-      
+
       L.control.zoom({
         position: 'bottomright'
       }).addTo(map);
@@ -531,9 +585,9 @@
         if (!markersRes.ok) {
           throw new Error('Failed to fetch markers.json');
         }
-        
+
         const markersData = await markersRes.json();
-        
+
         if (markersData.length === 0) {
           loader.querySelector('.loader-text').innerText = 'No markers found.';
           setTimeout(() => loader.style.opacity = 0, 1000);
@@ -553,11 +607,11 @@
         // Group by country for the sidebar
         const sidebarContent = document.getElementById('sidebar-content');
         const groups = {};
-        
+
         // Setup toggle handlers
         const sidebar = document.getElementById('sidebar');
         const toggleBtn = document.getElementById('sidebar-toggle');
-        
+
         // Initial state logic based on screen width
         const isMobile = window.innerWidth <= 768;
         if (!isMobile) {
@@ -577,7 +631,7 @@
         mapMarkers.forEach(item => {
           const lat = parseFloat(item.latitude);
           const lng = parseFloat(item.longitude);
-          
+
           if (isNaN(lat) || isNaN(lng)) return;
 
           const latLng = L.latLng(lat, lng);
@@ -621,7 +675,7 @@
             maxWidth: 280,
             minWidth: 280
           };
-          
+
           const catColor = item.category ? colorConfig.categories[item.category] : null;
           if (catColor) {
             markerOptions.icon = createMarkerIcon(catColor);
@@ -652,18 +706,18 @@
         Object.keys(groups).sort().forEach(country => {
           const groupDiv = document.createElement('div');
           groupDiv.className = 'country-group';
-          
+
           const headerDiv = document.createElement('div');
           headerDiv.className = 'country-header';
           headerDiv.innerText = country;
           headerDiv.onclick = () => {
             groupDiv.classList.toggle('open');
           };
-          
+
           const itemsDiv = document.createElement('div');
           itemsDiv.className = 'country-items';
-          
-          groups[country].sort((a,b) => a.title.localeCompare(b.title)).forEach(item => {
+
+          groups[country].sort((a, b) => a.title.localeCompare(b.title)).forEach(item => {
             const itemDiv = document.createElement('div');
             const hasCoords = item.hasCoordinates === true || (item.latitude !== null && item.longitude !== null);
             itemDiv.className = 'institute-item' + (hasCoords ? '' : ' no-coords');
@@ -691,7 +745,7 @@
             };
             itemsDiv.appendChild(itemDiv);
           });
-          
+
           groupDiv.appendChild(headerDiv);
           groupDiv.appendChild(itemsDiv);
           sidebarContent.appendChild(groupDiv);
@@ -718,4 +772,5 @@
     });
   </script>
 </body>
+
 </html>

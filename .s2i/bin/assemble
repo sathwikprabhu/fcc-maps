@@ -1,0 +1,12 @@
+#!/bin/bash
+set -e
+
+echo "---> Installing dependencies and building..."
+
+# Install root deps (concurrently etc.)
+npm install
+
+# Build server (TypeScript) + admin (Vite)
+npm run build
+
+echo "---> Build complete."
