@@ -54,9 +54,21 @@ app.use('/api', apiRouter);
 const publicPath = path.join(__dirname, '../../public');
 app.use(express.static(publicPath));
 
-// Serve dynamic markers.json and uploaded files statically from the storage directory
+// Serve ONLY markers.json and uploads/ from storage — never expose settings/logs/status/colors
 const storagePath = path.join(__dirname, '../storage');
-app.use(express.static(storagePath));
+
+// Explicitly block sensitive files
+app.get(['/settings.json', '/status.json', '/logs.json', '/colors.json'], (req, res) => {
+  res.status(403).json({ error: 'Forbidden' });
+});
+
+// Only serve markers.json publicly
+app.get('/markers.json', (req, res) => {
+  res.sendFile(path.join(storagePath, 'markers.json'));
+});
+
+// Only serve uploaded files (logos, favicons) publicly
+app.use('/uploads', express.static(path.join(storagePath, 'uploads')));
 
 // Fallback for SPA routing if admin dashboard is built into public/admin
 app.get('/admin', (req, res) => {
