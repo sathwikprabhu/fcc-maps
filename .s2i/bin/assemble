@@ -1,9 +1,18 @@
 #!/bin/bash
 set -e
 
+# S2I builder puts the source code in /tmp/src initially.
+# We must copy it to the destination directory (/opt/app-root/src).
+if [ -d /tmp/src ]; then
+  echo "---> Copying application source..."
+  cp -Rf /tmp/src/. /opt/app-root/src/
+fi
+
+cd /opt/app-root/src
+
 echo "---> Installing dependencies and building..."
 
-# Install root deps (concurrently etc.)
+# Install root deps
 npm install
 
 # Build server (TypeScript) + admin (Vite)
