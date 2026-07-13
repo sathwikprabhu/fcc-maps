@@ -26,22 +26,46 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS
 
 const isProduction = process.env.NODE_ENV === 'production';
 
-app.use(cors({
-  origin: (origin, callback) => {
-    // Allow requests with no origin (server-to-server, curl, etc.)
-    if (!origin) return callback(null, true);
-    // In production with no ALLOWED_ORIGINS set, deny all cross-origin requests
-    if (isProduction && allowedOrigins.length === 0) {
-      return callback(new Error('ALLOWED_ORIGINS not configured'));
-    }
-    if (allowedOrigins.length === 0 || allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    }
-    callback(new Error('Not allowed by CORS'));
-  },
+// CORS middleware with same-origin detection.
+// The admin panel is served from the same origin as the API, but browsers
+// still send an Origin header on fetch() requests. We detect same-origin
+// by comparing Origin against the Host header and always allow those.
+const corsMiddleware = cors({
+  origin: true, // reflect the request origin (used only when we call next)
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type'],
-}));
+});
+
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  // No Origin header → not a browser cross-origin request, allow
+  if (!origin) return next();
+
+  // Same-origin check: extract hostname from Origin and compare with Host header
+  try {
+    const originHost = new URL(origin).host;
+    const requestHost = req.headers.host;
+    if (originHost === requestHost) {
+      // Same-origin request (e.g. admin panel calling API) — skip CORS
+      return next();
+    }
+  } catch {
+    // Malformed Origin — fall through to CORS check
+  }
+
+  // Explicitly allowed origins
+  if (allowedOrigins.includes(origin)) {
+    return corsMiddleware(req, res, next);
+  }
+
+  // In production with no ALLOWED_ORIGINS, deny unknown cross-origin requests
+  if (isProduction && allowedOrigins.length === 0) {
+    return res.status(403).json({ error: 'CORS: origin not allowed' });
+  }
+
+  // Dev mode with no ALLOWED_ORIGINS — allow everything
+  return corsMiddleware(req, res, next);
+});
 
 // Tight body size for API requests; upload route has its own higher limit
 app.use(express.json({ limit: '100kb' }));
