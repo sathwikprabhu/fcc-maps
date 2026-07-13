@@ -14,6 +14,11 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5050;
 
+// Serve static files FIRST, before CORS — admin assets (JS/CSS bundles),
+// embed files, etc. are same-origin requests that don't need CORS headers.
+const publicPath = path.join(__dirname, '../../public');
+app.use(express.static(publicPath));
+
 // Restrict CORS to same-origin and known embed origins
 const allowedOrigins = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(',')
@@ -56,10 +61,6 @@ app.get('/', (req, res) => {
 
 // API Routes
 app.use('/api', apiRouter);
-
-// Serve embed page and admin dashboard statically from the root public directory
-const publicPath = path.join(__dirname, '../../public');
-app.use(express.static(publicPath));
 
 // Serve ONLY markers.json and uploads/ from storage root.
 // Sensitive files (settings, logs, status, colors) live in storage/config/
