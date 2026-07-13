@@ -140,6 +140,24 @@ function ColorPicker({ value, onChange }: { value: string; onChange: (val: strin
   );
 }
 
+
+// ---------------------------------------------------------------------------
+// API helper — injects Authorization header when VITE_ADMIN_API_KEY is set.
+// Set VITE_ADMIN_API_KEY in your .env (or OpenShift env vars) to match the
+// ADMIN_API_KEY configured on the server.
+// ---------------------------------------------------------------------------
+const ADMIN_API_KEY = import.meta.env.VITE_ADMIN_API_KEY as string | undefined;
+
+function apiFetch(url: string, init: RequestInit = {}): Promise<Response> {
+  const headers: Record<string, string> = {
+    ...(init.headers as Record<string, string> ?? {}),
+  };
+  if (ADMIN_API_KEY) {
+    headers['Authorization'] = `Bearer ${ADMIN_API_KEY}`;
+  }
+  return fetch(url, { ...init, headers });
+}
+
 export default function App() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -246,9 +264,9 @@ export default function App() {
     setLoading(true);
     try {
       const [settingsRes, statusRes, logsRes] = await Promise.all([
-        fetch('/api/settings'),
-        fetch('/api/status'),
-        fetch('/api/logs'),
+        apiFetch('/api/settings'),
+        apiFetch('/api/status'),
+        apiFetch('/api/logs'),
       ]);
       if (settingsRes.ok) setSettings(await settingsRes.json());
       if (statusRes.ok) setStatus(await statusRes.json());
@@ -263,8 +281,8 @@ export default function App() {
   const fetchColorsAndTaxonomies = async () => {
     try {
       const [taxRes, colorsRes] = await Promise.all([
-        fetch('/api/taxonomy-list'),
-        fetch('/api/colors')
+        apiFetch('/api/taxonomy-list'),
+        apiFetch('/api/colors')
       ]);
       if (taxRes.ok) setTaxonomies(await taxRes.json());
       if (colorsRes.ok) setColors(await colorsRes.json());
@@ -276,8 +294,8 @@ export default function App() {
   const fetchStatusAndLogs = async () => {
     try {
       const [statusRes, logsRes] = await Promise.all([
-        fetch('/api/status'),
-        fetch('/api/logs'),
+        apiFetch('/api/status'),
+        apiFetch('/api/logs'),
       ]);
       if (statusRes.ok) {
         const newStatus = await statusRes.json();
@@ -295,7 +313,7 @@ export default function App() {
   const handleSyncNow = async () => {
     setSyncingLocal(true);
     try {
-      const res = await fetch('/api/sync', { method: 'POST' });
+      const res = await apiFetch('/api/sync', { method: 'POST' });
       if (res.ok) {
         if (status) setStatus({ ...status, status: 'syncing' });
         setTimeout(fetchStatusAndLogs, 1000);
@@ -311,7 +329,7 @@ export default function App() {
     e.preventDefault();
     setSaveStatus(null);
     try {
-      const res = await fetch('/api/settings', {
+      const res = await apiFetch('/api/settings', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formSettings),
@@ -339,7 +357,7 @@ export default function App() {
     reader.onloadend = async () => {
       const base64 = reader.result as string;
       try {
-        const response = await fetch('/api/upload-logo', {
+        const response = await apiFetch('/api/upload-logo', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ filename: file.name, base64 }),
@@ -365,7 +383,7 @@ export default function App() {
     reader.onloadend = async () => {
       const base64 = reader.result as string;
       try {
-        const response = await fetch('/api/upload-logo', {
+        const response = await apiFetch('/api/upload-logo', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ filename: file.name, base64 }),
@@ -386,7 +404,7 @@ export default function App() {
   const handleSaveColors = async () => {
     setColorsSaveStatus(null);
     try {
-      const res = await fetch('/api/colors', {
+      const res = await apiFetch('/api/colors', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(colors),
@@ -412,7 +430,7 @@ export default function App() {
       if (formSettings.authEnabled && formSettings.username && formSettings.password) {
         headers['Authorization'] = `Basic ${btoa(`${formSettings.username}:${formSettings.password}`)}`;
       }
-      const response = await fetch(url, { headers });
+      const response = await apiFetch(url, { headers });
       if (response.ok) {
         const data = await response.json();
         if (Array.isArray(data)) {
@@ -433,7 +451,7 @@ export default function App() {
   const handleClearLogs = async () => {
     if (confirm('Are you sure you want to clear all scheduler logs?')) {
       try {
-        const res = await fetch('/api/logs', { method: 'DELETE' });
+        const res = await apiFetch('/api/logs', { method: 'DELETE' });
         if (res.ok) { setLogs([]); setExpandedLogIdx(null); }
       } catch (error) {
         console.error('Error clearing logs:', error);
@@ -627,12 +645,24 @@ export default function App() {
                   <Button
                     variant="outline"
                     className="w-full"
-                    asChild
+                    onClick={async () => {
+                      try {
+                        const res = await apiFetch('/api/export-csv');
+                        if (!res.ok) throw new Error('Export failed');
+                        const blob = await res.blob();
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `fcc-maps-export-${new Date().toISOString().slice(0, 10)}.csv`;
+                        a.click();
+                        URL.revokeObjectURL(url);
+                      } catch {
+                        alert('CSV export failed.');
+                      }
+                    }}
                   >
-                    <a href="/api/export-csv" download>
-                      <Download className="h-4 w-4 mr-2" />
-                      Export CSV
-                    </a>
+                    <Download className="h-4 w-4 mr-2" />
+                    Export CSV
                   </Button>
                 </CardContent>
               </Card>
@@ -1071,7 +1101,7 @@ export default function App() {
                                   size="sm"
                                   disabled={!formSettings.username || !formSettings.password}
                                   onClick={async () => {
-                                    const res = await fetch('/api/settings', {
+                                    const res = await apiFetch('/api/settings', {
                                       method: 'PUT',
                                       headers: { 'Content-Type': 'application/json' },
                                       body: JSON.stringify(formSettings),

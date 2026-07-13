@@ -2,14 +2,38 @@ import express, { Router, Request, Response } from 'express';
 import { storage } from '../services/storage';
 import { scheduler } from '../scheduler/scheduler';
 import { Settings } from '../types';
+import { requireApiKey } from '../middleware/auth';
+import { strictLimiter, standardLimiter, looseLimiter } from '../middleware/rateLimiter';
 import fs from 'fs';
 import path from 'path';
 
 const router = Router();
 
-// GET /api/settings — credentials are NEVER sent to the browser
-// The UI uses hasCredentials to know if auth is already configured
-router.get('/settings', (req: Request, res: Response) => {
+// ---------------------------------------------------------------------------
+// Private IP / loopback SSRF block list
+// Rejects user-supplied URLs that point at internal/cloud-metadata addresses.
+// ---------------------------------------------------------------------------
+const PRIVATE_IP_RE = /^(10\.|172\.(1[6-9]|2\d|3[01])\.|192\.168\.|127\.|0\.|localhost|::1|fc00:|fd|169\.254\.)/i;
+const CLOUD_METADATA_RE = /169\.254\.169\.254/;
+
+function isSsrfUrl(rawUrl: string): boolean {
+  try {
+    const parsed = new URL(rawUrl);
+    const hostname = parsed.hostname.toLowerCase();
+    return (
+      PRIVATE_IP_RE.test(hostname) ||
+      CLOUD_METADATA_RE.test(hostname) ||
+      hostname === 'metadata.google.internal'
+    );
+  } catch {
+    return true; // unparseable → reject
+  }
+}
+
+// ---------------------------------------------------------------------------
+// GET /api/settings — open read; credentials are NEVER sent to browser
+// ---------------------------------------------------------------------------
+router.get('/settings', looseLimiter, (req: Request, res: Response) => {
   try {
     const settings = storage.getSettings();
     const { password: _pw, username: _un, ...safeSettings } = settings as any;
@@ -17,62 +41,97 @@ router.get('/settings', (req: Request, res: Response) => {
       ...safeSettings,
       hasCredentials: !!(settings.username && settings.password),
     });
-  } catch (error) {
+  } catch {
     res.status(500).json({ error: 'Failed to retrieve settings' });
   }
 });
 
-// PUT /api/settings
-router.put('/settings', (req: Request, res: Response) => {
+// ---------------------------------------------------------------------------
+// PUT /api/settings — protected write
+// ---------------------------------------------------------------------------
+router.put('/settings', requireApiKey, standardLimiter, (req: Request, res: Response) => {
   try {
-    const newSettings: Settings = req.body;
+    // Allowlist: only accept known Settings fields — no mass assignment
+    const body = req.body ?? {};
+    const newSettings: Settings = {
+      wpApiUrl:           typeof body.wpApiUrl === 'string'           ? body.wpApiUrl.trim()          : '',
+      authEnabled:        typeof body.authEnabled === 'boolean'       ? body.authEnabled              : false,
+      username:           typeof body.username === 'string'           ? body.username                 : '',
+      password:           typeof body.password === 'string'           ? body.password                 : '',
+      syncIntervalHours:  typeof body.syncIntervalHours === 'number'  ? body.syncIntervalHours        : 12,
+      defaultLat:         typeof body.defaultLat === 'number'         ? body.defaultLat               : 46.23307,
+      defaultLng:         typeof body.defaultLng === 'number'         ? body.defaultLng               : 6.05551,
+      defaultZoom:        typeof body.defaultZoom === 'number'        ? body.defaultZoom              : 8,
+      enableClustering:   typeof body.enableClustering === 'boolean'  ? body.enableClustering         : true,
+      logoUrl:            typeof body.logoUrl === 'string'            ? body.logoUrl.trim()           : '',
+      appTitle:           typeof body.appTitle === 'string'           ? body.appTitle.trim()          : 'FCC Maps',
+      faviconUrl:         typeof body.faviconUrl === 'string'         ? body.faviconUrl.trim()        : '',
+      baseMapUrl:         typeof body.baseMapUrl === 'string'         ? body.baseMapUrl.trim()        : '',
+    };
 
     if (!newSettings.wpApiUrl) {
       return res.status(400).json({ error: 'WordPress API URL is required' });
     }
 
-    // Basic URL validation
+    // URL format validation
     try {
       new URL(newSettings.wpApiUrl);
-    } catch (e) {
+    } catch {
       return res.status(400).json({ error: 'Invalid WordPress API URL format' });
+    }
+
+    // SSRF protection — block private/loopback targets
+    if (isSsrfUrl(newSettings.wpApiUrl)) {
+      return res.status(400).json({ error: 'WordPress API URL must not point to a private or internal address.' });
     }
 
     if (typeof newSettings.syncIntervalHours !== 'number' || newSettings.syncIntervalHours < 1) {
       return res.status(400).json({ error: 'Sync interval must be at least 1 hour' });
     }
-
     if (newSettings.syncIntervalHours > 8760) {
       return res.status(400).json({ error: 'Sync interval cannot exceed 8760 hours (1 year)' });
     }
 
-    // Preserve existing credentials if the client didn't send new ones
-    // (credentials are never returned by GET, so empty = user didn't touch them)
+    // Validate coordinate bounds
+    if (newSettings.defaultLat < -90 || newSettings.defaultLat > 90) {
+      return res.status(400).json({ error: 'Default latitude must be between -90 and 90' });
+    }
+    if (newSettings.defaultLng < -180 || newSettings.defaultLng > 180) {
+      return res.status(400).json({ error: 'Default longitude must be between -180 and 180' });
+    }
+    if (newSettings.defaultZoom < 1 || newSettings.defaultZoom > 20) {
+      return res.status(400).json({ error: 'Default zoom must be between 1 and 20' });
+    }
+
+    // Preserve existing credentials if the client did not send new ones
     if (!newSettings.username || !newSettings.password) {
       const existing = storage.getSettings();
       if (!newSettings.username) newSettings.username = existing.username;
       if (!newSettings.password) newSettings.password = existing.password;
     }
+
     storage.saveSettings(newSettings);
-    
-    // Reschedule jobs with new frequency
     scheduler.reschedule();
 
-    // Never echo credentials back in response
     const { password: _pw, username: _un, ...safeSettings } = newSettings as any;
     res.json({
       message: 'Settings saved successfully',
       settings: { ...safeSettings, hasCredentials: !!(_un && _pw) },
     });
-  } catch (error) {
+  } catch {
     res.status(500).json({ error: 'Failed to save settings' });
   }
 });
 
-// POST /api/upload-logo
-router.post('/upload-logo', express.json({ limit: '5mb' }), (req: Request, res: Response) => {
+// ---------------------------------------------------------------------------
+// POST /api/upload-logo — protected write
+// ---------------------------------------------------------------------------
+router.post('/upload-logo', requireApiKey, strictLimiter, express.json({ limit: '5mb' }), (req: Request, res: Response) => {
   try {
     const { filename, base64 } = req.body;
+    if (typeof filename !== 'string' || typeof base64 !== 'string') {
+      return res.status(400).json({ error: 'Filename and base64 data are required' });
+    }
     if (!filename || !base64) {
       return res.status(400).json({ error: 'Filename and base64 data are required' });
     }
@@ -84,12 +143,12 @@ router.post('/upload-logo', express.json({ limit: '5mb' }), (req: Request, res: 
       return res.status(400).json({ error: 'Invalid file type. Only PNG, JPEG, GIF, WebP, and SVG are allowed.' });
     }
 
-    // Enforce safe extension matching the MIME type
+    // Enforce extension matching MIME (no double-extension bypass)
     const mimeToExt: Record<string, string[]> = {
-      'image/png': ['.png'],
-      'image/jpeg': ['.jpg', '.jpeg'],
-      'image/gif': ['.gif'],
-      'image/webp': ['.webp'],
+      'image/png':     ['.png'],
+      'image/jpeg':    ['.jpg', '.jpeg'],
+      'image/gif':     ['.gif'],
+      'image/webp':    ['.webp'],
       'image/svg+xml': ['.svg'],
     };
     const ext = path.extname(filename).toLowerCase();
@@ -98,12 +157,26 @@ router.post('/upload-logo', express.json({ limit: '5mb' }), (req: Request, res: 
       return res.status(400).json({ error: `File extension '${ext}' does not match content type '${mimeMatch[1]}'.` });
     }
 
-    const base64Data = base64.replace(/^data:image\/\w+;base64,/, "");
+    // Strip data URI prefix before decoding
+    const base64Data = base64.replace(/^data:[^;]+;base64,/, '');
     const buffer = Buffer.from(base64Data, 'base64');
 
-    // Reject suspiciously large decoded files (>3 MB)
+    // Reject oversized files (>3 MB decoded)
     if (buffer.length > 3 * 1024 * 1024) {
       return res.status(400).json({ error: 'File too large. Maximum size is 3 MB.' });
+    }
+
+    // SVG sanitisation — strip script tags and event handler attributes to prevent XSS
+    let finalBuffer = buffer;
+    if (mimeMatch[1] === 'image/svg+xml') {
+      let svgContent = buffer.toString('utf-8');
+      // Remove <script> blocks
+      svgContent = svgContent.replace(/<script[\s\S]*?<\/script>/gi, '');
+      // Remove on* event handler attributes (onclick, onload, onerror, etc.)
+      svgContent = svgContent.replace(/\son\w+\s*=\s*("[^"]*"|'[^']*'|[^\s>]*)/gi, '');
+      // Remove javascript: hrefs
+      svgContent = svgContent.replace(/href\s*=\s*["']?\s*javascript:[^"'\s>]*/gi, 'href="#"');
+      finalBuffer = Buffer.from(svgContent, 'utf-8');
     }
 
     const uploadsDir = path.join(__dirname, '../../storage/uploads');
@@ -111,45 +184,66 @@ router.post('/upload-logo', express.json({ limit: '5mb' }), (req: Request, res: 
       fs.mkdirSync(uploadsDir, { recursive: true });
     }
 
-    const safeFilename = filename.replace(/[^a-zA-Z0-9.\-_]/g, '_');
+    // Generate a server-controlled filename: sanitise user input but keep extension
+    const baseName = path.basename(filename, ext).replace(/[^a-zA-Z0-9\-_]/g, '_');
+    const safeFilename = `${baseName}${ext}`;
     const filePath = path.join(uploadsDir, safeFilename);
 
-    // Prevent path traversal
+    // Path traversal guard
     const resolvedPath = path.resolve(filePath);
     const resolvedDir = path.resolve(uploadsDir);
     if (!resolvedPath.startsWith(resolvedDir + path.sep)) {
       return res.status(400).json({ error: 'Invalid filename.' });
     }
 
-    fs.writeFileSync(filePath, buffer);
+    fs.writeFileSync(filePath, finalBuffer);
     res.json({ url: `/uploads/${safeFilename}` });
-  } catch (error) {
+  } catch {
     res.status(500).json({ error: 'Failed to upload logo' });
   }
 });
 
-// GET /api/colors
-router.get('/colors', (req: Request, res: Response) => {
+// ---------------------------------------------------------------------------
+// GET /api/colors — open read
+// ---------------------------------------------------------------------------
+router.get('/colors', looseLimiter, (_req: Request, res: Response) => {
   try {
     res.json(storage.getColors());
-  } catch (error) {
+  } catch {
     res.status(500).json({ error: 'Failed to retrieve colors' });
   }
 });
 
-// PUT /api/colors
-router.put('/colors', (req: Request, res: Response) => {
+// ---------------------------------------------------------------------------
+// PUT /api/colors — protected write with input validation
+// ---------------------------------------------------------------------------
+router.put('/colors', requireApiKey, standardLimiter, (req: Request, res: Response) => {
   try {
-    const { categories, tags } = req.body;
-    storage.saveColors({ categories: categories || {}, tags: tags || {} });
+    const body = req.body ?? {};
+    const { categories, tags } = body;
+
+    // Validate: both must be plain objects with string keys and string values
+    function isColorMap(val: unknown): val is Record<string, string> {
+      if (typeof val !== 'object' || val === null || Array.isArray(val)) return false;
+      const entries = Object.entries(val as object);
+      if (entries.length > 500) return false; // sanity cap
+      return entries.every(([k, v]) => typeof k === 'string' && typeof v === 'string' && /^#[0-9a-fA-F]{3,8}$/.test(v));
+    }
+
+    const safeCategories = categories && isColorMap(categories) ? categories : {};
+    const safeTags = tags && isColorMap(tags) ? tags : {};
+
+    storage.saveColors({ categories: safeCategories, tags: safeTags });
     res.json({ message: 'Colors saved successfully' });
-  } catch (error) {
+  } catch {
     res.status(500).json({ error: 'Failed to save colors' });
   }
 });
 
-// GET /api/taxonomy-list
-router.get('/taxonomy-list', (req: Request, res: Response) => {
+// ---------------------------------------------------------------------------
+// GET /api/taxonomy-list — open read
+// ---------------------------------------------------------------------------
+router.get('/taxonomy-list', looseLimiter, (_req: Request, res: Response) => {
   try {
     const markers = storage.getParsedMarkers();
     const categoriesSet = new Set<string>();
@@ -164,59 +258,65 @@ router.get('/taxonomy-list', (req: Request, res: Response) => {
 
     res.json({
       categories: Array.from(categoriesSet),
-      tags: Array.from(tagsSet)
+      tags: Array.from(tagsSet),
     });
-  } catch (error) {
+  } catch {
     res.status(500).json({ error: 'Failed to retrieve taxonomies' });
   }
 });
 
-// POST /api/sync
-router.post('/sync', (req: Request, res: Response) => {
+// ---------------------------------------------------------------------------
+// POST /api/sync — protected, strict rate limit
+// ---------------------------------------------------------------------------
+router.post('/sync', requireApiKey, strictLimiter, (_req: Request, res: Response) => {
   try {
-    // Run sync in the background so request completes instantly
     scheduler.sync(true).catch(err => {
       storage.addLog('error', 'Manual sync error', String(err));
     });
-    
     res.json({ message: 'Synchronization triggered in background' });
-  } catch (error) {
+  } catch {
     res.status(500).json({ error: 'Failed to trigger sync' });
   }
 });
 
-// GET /api/status
-router.get('/status', (req: Request, res: Response) => {
+// ---------------------------------------------------------------------------
+// GET /api/status — protected read (exposes internal state)
+// ---------------------------------------------------------------------------
+router.get('/status', requireApiKey, looseLimiter, (_req: Request, res: Response) => {
   try {
-    const status = storage.getStatus();
-    res.json(status);
-  } catch (error) {
+    res.json(storage.getStatus());
+  } catch {
     res.status(500).json({ error: 'Failed to retrieve status' });
   }
 });
 
-// GET /api/logs
-router.get('/logs', (req: Request, res: Response) => {
+// ---------------------------------------------------------------------------
+// GET /api/logs — protected read
+// ---------------------------------------------------------------------------
+router.get('/logs', requireApiKey, looseLimiter, (_req: Request, res: Response) => {
   try {
-    const logs = storage.getLogs();
-    res.json(logs);
-  } catch (error) {
+    res.json(storage.getLogs());
+  } catch {
     res.status(500).json({ error: 'Failed to retrieve logs' });
   }
 });
 
-// DELETE /api/logs (Clear logs)
-router.delete('/logs', (req: Request, res: Response) => {
+// ---------------------------------------------------------------------------
+// DELETE /api/logs — protected write
+// ---------------------------------------------------------------------------
+router.delete('/logs', requireApiKey, standardLimiter, (_req: Request, res: Response) => {
   try {
     storage.clearLogs();
     res.json({ message: 'Logs cleared successfully' });
-  } catch (error) {
+  } catch {
     res.status(500).json({ error: 'Failed to clear logs' });
   }
 });
 
-// GET /api/export-csv — Download all markers as a CSV (including entries without coordinates)
-router.get('/export-csv', (req: Request, res: Response) => {
+// ---------------------------------------------------------------------------
+// GET /api/export-csv — protected, rate limited
+// ---------------------------------------------------------------------------
+router.get('/export-csv', requireApiKey, looseLimiter, (_req: Request, res: Response) => {
   try {
     const markers = storage.getParsedMarkers();
 
@@ -224,7 +324,6 @@ router.get('/export-csv', (req: Request, res: Response) => {
       return res.status(404).json({ error: 'No marker data available. Run a sync first.' });
     }
 
-    // CSV helper — wrap value in quotes and escape any inner quotes
     const csvCell = (val: any): string => {
       if (val === null || val === undefined) return '';
       const str = String(val).replace(/"/g, '""');
@@ -246,119 +345,68 @@ router.get('/export-csv', (req: Request, res: Response) => {
     ].join(','));
 
     const csv = [headers.join(','), ...rows].join('\r\n');
-
     const filename = `fcc-maps-export-${new Date().toISOString().slice(0, 10)}.csv`;
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-    // BOM for Excel UTF-8 compatibility
     res.send('\uFEFF' + csv);
-  } catch (error) {
+  } catch {
     res.status(500).json({ error: 'Failed to generate CSV export' });
   }
 });
 
-// GET /api/mock-wp — only available outside production
+// ---------------------------------------------------------------------------
+// GET /api/mock-wp — dev only
+// ---------------------------------------------------------------------------
 if (process.env.NODE_ENV !== 'production') {
-  router.get('/mock-wp', (req: Request, res: Response) => {
-  const mockPosts = [
-    {
-      id: 1,
-      title: { rendered: "University of Geneva" },
-      link: "https://www.unige.ch",
-      excerpt: { rendered: "<p>46.23307388854503, 6.055512805451645</p>" },
-      content: { rendered: "<div>Welcome to the University of Geneva. Check out our CERN projects! <p id=\"website-url\"><a href=\"http://cern.ch\">www.cern.ch</a></p></div>" },
-      _embedded: {
-        "wp:term": [
-          [
-            { id: 10, name: "Public", taxonomy: "category" }
+  router.get('/mock-wp', (_req: Request, res: Response) => {
+    const mockPosts = [
+      {
+        id: 1,
+        title: { rendered: 'University of Geneva' },
+        link: 'https://www.unige.ch',
+        excerpt: { rendered: '<p>46.23307388854503, 6.055512805451645</p>' },
+        content: { rendered: '<div>Welcome to the University of Geneva. <p id="website-url"><a href="http://cern.ch">www.cern.ch</a></p></div>' },
+        _embedded: {
+          'wp:term': [
+            [{ id: 10, name: 'Public', taxonomy: 'category' }],
+            [{ id: 20, name: 'Switzerland', taxonomy: 'post_tag' }],
           ],
-          [
-            { id: 20, name: "Switzerland", taxonomy: "post_tag" }
-          ]
-        ],
-        "wp:featuredmedia": [
-          { source_url: "https://images.unsplash.com/photo-1541339907198-e08756dedf3f?w=600&auto=format&fit=crop&q=80" }
-        ]
-      }
-    },
-    {
-      id: 2,
-      title: { rendered: "University of Zurich" },
-      link: "https://www.uzh.ch",
-      excerpt: { rendered: "<p>47.3762898, 8.540212</p>" },
-      content: { rendered: "<div>Zurich University provides world-class education. <p id=\"website-url\">www.uzh.ch</p></div>" },
-      _embedded: {
-        "wp:term": [
-          [
-            { id: 10, name: "Public", taxonomy: "category" }
+          'wp:featuredmedia': [
+            { source_url: 'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?w=600&auto=format&fit=crop&q=80' },
           ],
-          [
-            { id: 20, name: "Switzerland", taxonomy: "post_tag" }
-          ]
-        ],
-        "wp:featuredmedia": [
-          { source_url: "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=600&auto=format&fit=crop&q=80" }
-        ]
-      }
-    },
-    {
-      id: 3,
-      title: { rendered: "University of Tokyo" },
-      link: "https://www.u-tokyo.ac.jp",
-      excerpt: { rendered: "<p>35.712678, 139.761989</p>" },
-      _embedded: {
-        "wp:term": [
-          [
-            { id: 11, name: "National", taxonomy: "category" }
+        },
+      },
+      {
+        id: 2,
+        title: { rendered: 'University of Zurich' },
+        link: 'https://www.uzh.ch',
+        excerpt: { rendered: '<p>47.3762898, 8.540212</p>' },
+        content: { rendered: '<div>Zurich University provides world-class education. <p id="website-url">www.uzh.ch</p></div>' },
+        _embedded: {
+          'wp:term': [
+            [{ id: 10, name: 'Public', taxonomy: 'category' }],
+            [{ id: 20, name: 'Switzerland', taxonomy: 'post_tag' }],
           ],
-          [
-            { id: 21, name: "Japan", taxonomy: "post_tag" }
-          ]
-        ],
-        "wp:featuredmedia": [
-          { source_url: "https://images.unsplash.com/photo-1592280771190-3e2e4d571952?w=600&auto=format&fit=crop&q=80" }
-        ]
-      }
-    },
-    {
-      id: 4,
-      title: { rendered: "University of Oxford" },
-      link: "https://www.ox.ac.uk",
-      excerpt: { rendered: "<p>51.754816, -1.254367</p>" },
-      _embedded: {
-        "wp:term": [
-          [
-            { id: 10, name: "Public", taxonomy: "category" }
+          'wp:featuredmedia': [
+            { source_url: 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=600&auto=format&fit=crop&q=80' },
           ],
-          [
-            { id: 22, name: "United Kingdom", taxonomy: "post_tag" }
-          ]
-        ],
-        "wp:featuredmedia": [
-          { source_url: "https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=600&auto=format&fit=crop&q=80" }
-        ]
-      }
-    },
-    {
-      id: 5,
-      title: { rendered: "Invalid Coordinates University" },
-      link: "https://example.com/invalid",
-      excerpt: { rendered: "<p>95.0, 195.0</p>" }
-    },
-    {
-      id: 6,
-      title: { rendered: "Missing Coordinates University" },
-      link: "https://example.com/missing",
-      excerpt: { rendered: "<p>This is a beautiful university, but we forgot to add its coordinates in this excerpt.</p>" }
-    },
-    {
-      id: 7,
-      title: { rendered: "Duplicate Coordinates University (Geneva)" },
-      link: "https://example.com/duplicate",
-      excerpt: { rendered: "<p>46.23307388854503, 6.055512805451645</p>" }
-    }
-  ];
+        },
+      },
+      {
+        id: 5,
+        title: { rendered: 'Invalid Coordinates University' },
+        link: 'https://example.com/invalid',
+        excerpt: { rendered: '<p>95.0, 195.0</p>' },
+      },
+      {
+        id: 6,
+        title: { rendered: 'Missing Coordinates University' },
+        link: 'https://example.com/missing',
+        excerpt: { rendered: '<p>No coordinates here.</p>' },
+      },
+    ];
 
+    res.json(mockPosts);
   });
 }
 

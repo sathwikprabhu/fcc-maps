@@ -49,6 +49,25 @@ function ensureDirExists(dirPath: string) {
   }
 }
 
+/**
+ * Sanitises a string before it is written to the log file.
+ * - Strips ANSI escape sequences
+ * - Strips ASCII control characters (except tab/newline)
+ * - Truncates to 2000 characters to prevent log flooding
+ * - Removes internal filesystem path prefixes to avoid leaking server layout
+ */
+function sanitiseLogString(input: string): string {
+  return input
+    // Strip ANSI escape codes
+    .replace(/\x1B\[[0-9;]*[a-zA-Z]/g, '')
+    // Strip ASCII control characters except tab (\t) and newline (\n)
+    .replace(/[\x00-\x08\x0B-\x1F\x7F]/g, '')
+    // Remove absolute filesystem paths (e.g. /opt/app-root/src/...)
+    .replace(/\/[^\s"']+\/(opt|home|usr|tmp|var|app)[^\s"']*/g, '[path]')
+    // Truncate
+    .slice(0, 2000);
+}
+
 export class StorageService {
   constructor() {
     ensureDirExists(CONFIG_DIR);   // private config dir
@@ -113,11 +132,11 @@ export class StorageService {
       const newEntry: LogEntry = {
         timestamp: new Date().toISOString(),
         level,
-        message,
-        details,
+        message: sanitiseLogString(message),
+        details: details !== undefined ? sanitiseLogString(details) : undefined,
       };
       logs.unshift(newEntry); // Newest logs first
-      
+
       // Limit to last 500 entries
       const trimmedLogs = logs.slice(0, 500);
       fs.writeFileSync(LOGS_PATH, JSON.stringify(trimmedLogs, null, 2), 'utf-8');
