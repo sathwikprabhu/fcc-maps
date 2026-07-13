@@ -16,9 +16,6 @@ dotenv.config();
 const isProduction = process.env.NODE_ENV === 'production';
 
 if (isProduction) {
-  if (!process.env.ADMIN_API_KEY) {
-    console.warn('[WARN] ADMIN_API_KEY is not set. All protected admin API routes will return 503.');
-  }
   if (!process.env.ALLOWED_ORIGINS) {
     console.warn('[WARN] ALLOWED_ORIGINS is not set. Cross-origin requests from external sites will be blocked.');
   }

@@ -2,7 +2,7 @@ import express, { Router, Request, Response } from 'express';
 import { storage } from '../services/storage';
 import { scheduler } from '../scheduler/scheduler';
 import { Settings } from '../types';
-import { requireApiKey } from '../middleware/auth';
+
 import { strictLimiter, standardLimiter, looseLimiter } from '../middleware/rateLimiter';
 import fs from 'fs';
 import path from 'path';
@@ -49,7 +49,7 @@ router.get('/settings', looseLimiter, (req: Request, res: Response) => {
 // ---------------------------------------------------------------------------
 // PUT /api/settings — protected write
 // ---------------------------------------------------------------------------
-router.put('/settings', requireApiKey, standardLimiter, (req: Request, res: Response) => {
+router.put('/settings', standardLimiter, (req: Request, res: Response) => {
   try {
     // Allowlist: only accept known Settings fields — no mass assignment
     const body = req.body ?? {};
@@ -126,7 +126,7 @@ router.put('/settings', requireApiKey, standardLimiter, (req: Request, res: Resp
 // ---------------------------------------------------------------------------
 // POST /api/upload-logo — protected write
 // ---------------------------------------------------------------------------
-router.post('/upload-logo', requireApiKey, strictLimiter, express.json({ limit: '5mb' }), (req: Request, res: Response) => {
+router.post('/upload-logo', strictLimiter, express.json({ limit: '5mb' }), (req: Request, res: Response) => {
   try {
     const { filename, base64 } = req.body;
     if (typeof filename !== 'string' || typeof base64 !== 'string') {
@@ -217,7 +217,7 @@ router.get('/colors', looseLimiter, (_req: Request, res: Response) => {
 // ---------------------------------------------------------------------------
 // PUT /api/colors — protected write with input validation
 // ---------------------------------------------------------------------------
-router.put('/colors', requireApiKey, standardLimiter, (req: Request, res: Response) => {
+router.put('/colors', standardLimiter, (req: Request, res: Response) => {
   try {
     const body = req.body ?? {};
     const { categories, tags } = body;
@@ -268,7 +268,7 @@ router.get('/taxonomy-list', looseLimiter, (_req: Request, res: Response) => {
 // ---------------------------------------------------------------------------
 // POST /api/sync — protected, strict rate limit
 // ---------------------------------------------------------------------------
-router.post('/sync', requireApiKey, strictLimiter, (_req: Request, res: Response) => {
+router.post('/sync', strictLimiter, (_req: Request, res: Response) => {
   try {
     scheduler.sync(true).catch(err => {
       storage.addLog('error', 'Manual sync error', String(err));
@@ -282,7 +282,7 @@ router.post('/sync', requireApiKey, strictLimiter, (_req: Request, res: Response
 // ---------------------------------------------------------------------------
 // GET /api/status — protected read (exposes internal state)
 // ---------------------------------------------------------------------------
-router.get('/status', requireApiKey, looseLimiter, (_req: Request, res: Response) => {
+router.get('/status', looseLimiter, (_req: Request, res: Response) => {
   try {
     res.json(storage.getStatus());
   } catch {
@@ -293,7 +293,7 @@ router.get('/status', requireApiKey, looseLimiter, (_req: Request, res: Response
 // ---------------------------------------------------------------------------
 // GET /api/logs — protected read
 // ---------------------------------------------------------------------------
-router.get('/logs', requireApiKey, looseLimiter, (_req: Request, res: Response) => {
+router.get('/logs', looseLimiter, (_req: Request, res: Response) => {
   try {
     res.json(storage.getLogs());
   } catch {
@@ -304,7 +304,7 @@ router.get('/logs', requireApiKey, looseLimiter, (_req: Request, res: Response) 
 // ---------------------------------------------------------------------------
 // DELETE /api/logs — protected write
 // ---------------------------------------------------------------------------
-router.delete('/logs', requireApiKey, standardLimiter, (_req: Request, res: Response) => {
+router.delete('/logs', standardLimiter, (_req: Request, res: Response) => {
   try {
     storage.clearLogs();
     res.json({ message: 'Logs cleared successfully' });
@@ -316,7 +316,7 @@ router.delete('/logs', requireApiKey, standardLimiter, (_req: Request, res: Resp
 // ---------------------------------------------------------------------------
 // GET /api/export-csv — protected, rate limited
 // ---------------------------------------------------------------------------
-router.get('/export-csv', requireApiKey, looseLimiter, (_req: Request, res: Response) => {
+router.get('/export-csv', looseLimiter, (_req: Request, res: Response) => {
   try {
     const markers = storage.getParsedMarkers();
 
