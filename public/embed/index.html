@@ -404,6 +404,104 @@
         margin-left: -280px;
       }
     }
+
+    /* Sidebar Header Search & Filter Styles */
+    #sidebar-header {
+      padding: 16px;
+      border-bottom: 1px solid #e4e4e7;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .search-container {
+      position: relative;
+      width: 100%;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 8px 12px 8px 32px;
+      font-size: 0.875rem;
+      line-height: 1.25rem;
+      color: #09090b;
+      background-color: #ffffff;
+      border: 1px solid #e4e4e7;
+      border-radius: 6px;
+      box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      outline: none;
+      box-sizing: border-box;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    .search-input:focus {
+      border-color: #a1a1aa;
+      box-shadow: 0 0 0 2px rgba(24, 24, 27, 0.08);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #a1a1aa;
+      pointer-events: none;
+    }
+
+    .tag-filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      max-height: 80px;
+      overflow-y: auto;
+      padding-bottom: 2px;
+    }
+
+    .tag-filters::-webkit-scrollbar {
+      width: 4px;
+      height: 4px;
+    }
+
+    .tag-filters::-webkit-scrollbar-thumb {
+      background: #e4e4e7;
+      border-radius: 2px;
+    }
+
+    .tag-badge {
+      display: inline-flex;
+      align-items: center;
+      font-size: 0.75rem;
+      font-weight: 500;
+      padding: 3px 10px;
+      border-radius: 9999px;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.15s;
+      border: 1px solid #e4e4e7;
+    }
+
+    .tag-badge.active {
+      background-color: #18181b;
+      color: #ffffff;
+      border-color: #18181b;
+    }
+
+    .tag-badge:not(.active) {
+      background-color: #f4f4f5;
+      color: #71717a;
+    }
+
+    .tag-badge:not(.active):hover {
+      background-color: #e4e4e7;
+      color: #18181b;
+    }
+
+    .empty-state {
+      padding: 32px 16px;
+      text-align: center;
+      color: #71717a;
+      font-size: 0.875rem;
+    }
   </style>
 </head>
 
@@ -411,12 +509,19 @@
 
   <div id="loader">
     <div class="spinner"></div>
-    <div class="loader-text">Loading map markers...</div>
+    <div class="loader-text">Loading map...</div>
   </div>
 
 
   <div id="app-container">
     <div id="sidebar" class="collapsed">
+      <div id="sidebar-header">
+        <div class="search-container">
+          <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          <input type="text" id="search-input" class="search-input" placeholder="Search..." />
+        </div>
+        <div id="tag-filters" class="tag-filters"></div>
+      </div>
       <div id="sidebar-content"></div>
       <div id="sidebar-footer">
         <a id="export-csv-btn" href="/api/export-csv" download>
@@ -558,13 +663,13 @@
       }).addTo(map);
 
       // Add modern styled tile layer
-      let attribution = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+      let attribution = '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors';
       if (baseMapUrl.includes('cartocdn.com') || baseMapUrl.includes('carto.com')) {
-        attribution = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>';
+        attribution = '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions" target="_blank" rel="noopener noreferrer">CARTO</a>';
       } else if (baseMapUrl.includes('maptiler.com')) {
-        attribution = '&copy; <a href="https://www.maptiler.com/copyright/" target="_blank">MapTiler</a> &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap contributors</a>';
+        attribution = '&copy; <a href="https://www.maptiler.com/copyright/" target="_blank" rel="noopener noreferrer">MapTiler</a> &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap contributors</a>';
       } else if (baseMapUrl.includes('arcgisonline.com') || baseMapUrl.includes('esri')) {
-        attribution = 'Esri, HERE, Garmin, &copy; OpenStreetMap contributors';
+        attribution = 'Esri, HERE, Garmin, &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors';
       }
 
       L.tileLayer(baseMapUrl, {
@@ -604,12 +709,9 @@
 
         const bounds = L.latLngBounds();
 
-        // Group by country for the sidebar
-        const sidebarContent = document.getElementById('sidebar-content');
-        const groups = {};
-
         // Setup toggle handlers
         const sidebar = document.getElementById('sidebar');
+        const sidebarContent = document.getElementById('sidebar-content');
         const toggleBtn = document.getElementById('sidebar-toggle');
 
         // Initial state logic based on screen width
@@ -625,10 +727,8 @@
         // Store references to markers to open popups
         const markerRefs = {};
 
-        // Only markers with coordinates go on the map
-        const mapMarkers = markersData.filter(item => item.hasCoordinates === true || (item.latitude !== null && item.longitude !== null));
-
-        mapMarkers.forEach(item => {
+        // Build all markers and save references once
+        markersData.forEach(item => {
           const lat = parseFloat(item.latitude);
           const lng = parseFloat(item.longitude);
 
@@ -689,70 +789,163 @@
           });
 
           markerRefs[item.id || item.title] = { marker, latLng };
-
-          markerGroup.addLayer(marker);
         });
 
-        map.addLayer(markerGroup);
+        // Initialize filtering variables
+        let selectedTag = null;
+        let searchQuery = '';
 
-        // Build sidebar groups from ALL markers (including those without coordinates)
+        // Extract unique tags from markers
+        const allTags = new Set();
         markersData.forEach(item => {
-          const country = (item.country && item.country !== 'Unknown') ? item.country : (item.category || 'Other');
-          if (!groups[country]) groups[country] = [];
-          groups[country].push(item);
+          if (item.tags && Array.isArray(item.tags)) {
+            item.tags.forEach(tag => {
+              if (tag) allTags.add(tag);
+            });
+          }
         });
+        const sortedTags = Array.from(allTags).sort();
 
-        // Render sidebar items
-        Object.keys(groups).sort().forEach(country => {
-          const groupDiv = document.createElement('div');
-          groupDiv.className = 'country-group';
+        // Render tag badges dynamically
+        const tagFiltersContainer = document.getElementById('tag-filters');
+        function renderTagFilters() {
+          tagFiltersContainer.innerHTML = '';
 
-          const headerDiv = document.createElement('div');
-          headerDiv.className = 'country-header';
-          headerDiv.innerText = country;
-          headerDiv.onclick = () => {
-            groupDiv.classList.toggle('open');
+          // "All" filter
+          const allBadge = document.createElement('span');
+          allBadge.className = 'tag-badge' + (selectedTag === null ? ' active' : '');
+          allBadge.innerText = 'All';
+          allBadge.onclick = () => {
+            selectedTag = null;
+            renderTagFilters();
+            updateFilteredDisplay();
           };
+          tagFiltersContainer.appendChild(allBadge);
 
-          const itemsDiv = document.createElement('div');
-          itemsDiv.className = 'country-items';
-
-          groups[country].sort((a, b) => a.title.localeCompare(b.title)).forEach(item => {
-            const itemDiv = document.createElement('div');
-            const hasCoords = item.hasCoordinates === true || (item.latitude !== null && item.longitude !== null);
-            itemDiv.className = 'institute-item' + (hasCoords ? '' : ' no-coords');
-            itemDiv.innerText = item.title;
-            itemDiv.title = hasCoords ? item.title : `${item.title} (no coordinates)`;
-            itemDiv.onclick = () => {
-              const ref = markerRefs[item.id || item.title];
-              if (ref) {
-                const zoomAndOpen = () => {
-                  map.setView(ref.latLng, 5, { animate: true });
-                  setTimeout(() => ref.marker.openPopup(), 200); // slight delay for smooth animation
-                };
-
-                if (enableClustering && typeof markerGroup.zoomToShowLayer === 'function') {
-                  markerGroup.zoomToShowLayer(ref.marker, zoomAndOpen);
-                } else {
-                  zoomAndOpen();
-                }
-
-                if (window.innerWidth <= 768) {
-                  sidebar.classList.add('collapsed');
-                }
-              }
-              // If no coords, do nothing on click (cursor shows not-allowed via CSS)
+          // Dynamic tag filters
+          sortedTags.forEach(tag => {
+            const badge = document.createElement('span');
+            badge.className = 'tag-badge' + (selectedTag === tag ? ' active' : '');
+            badge.innerText = tag;
+            badge.onclick = () => {
+              selectedTag = selectedTag === tag ? null : tag;
+              renderTagFilters();
+              updateFilteredDisplay();
             };
-            itemsDiv.appendChild(itemDiv);
+            tagFiltersContainer.appendChild(badge);
+          });
+        }
+
+        // Update display logic for list & map markers
+        function updateFilteredDisplay() {
+          const query = searchQuery.trim().toLowerCase();
+
+          // Filter items based on active tags & search
+          const filteredItems = markersData.filter(item => {
+            const matchesSearch = !query || 
+              (item.title && item.title.toLowerCase().includes(query)) ||
+              (item.country && item.country.toLowerCase().includes(query)) ||
+              (item.category && item.category.toLowerCase().includes(query));
+
+            const matchesTag = !selectedTag || 
+              (item.tags && Array.isArray(item.tags) && item.tags.includes(selectedTag));
+
+            return matchesSearch && matchesTag;
           });
 
-          groupDiv.appendChild(headerDiv);
-          groupDiv.appendChild(itemsDiv);
-          sidebarContent.appendChild(groupDiv);
+          // 1. Update map markers layer
+          markerGroup.clearLayers();
+          const mapMarkers = filteredItems.filter(item => item.hasCoordinates === true || (item.latitude !== null && item.longitude !== null));
+          mapMarkers.forEach(item => {
+            const ref = markerRefs[item.id || item.title];
+            if (ref) {
+              markerGroup.addLayer(ref.marker);
+            }
+          });
+
+          // 2. Update sidebar content list
+          sidebarContent.innerHTML = '';
+
+          if (filteredItems.length === 0) {
+            const emptyDiv = document.createElement('div');
+            emptyDiv.className = 'empty-state';
+            emptyDiv.innerText = 'No matches found.';
+            sidebarContent.appendChild(emptyDiv);
+            return;
+          }
+
+          // Re-group matches by country
+          const groups = {};
+          filteredItems.forEach(item => {
+            const country = (item.country && item.country !== 'Unknown') ? item.country : (item.category || 'Other');
+            if (!groups[country]) groups[country] = [];
+            groups[country].push(item);
+          });
+
+          // Render groups
+          Object.keys(groups).sort().forEach(country => {
+            const groupDiv = document.createElement('div');
+            const isFiltering = query.length > 0 || selectedTag !== null;
+            groupDiv.className = 'country-group' + (isFiltering ? ' open' : '');
+
+            const headerDiv = document.createElement('div');
+            headerDiv.className = 'country-header';
+            headerDiv.innerText = country;
+            headerDiv.onclick = () => {
+              groupDiv.classList.toggle('open');
+            };
+
+            const itemsDiv = document.createElement('div');
+            itemsDiv.className = 'country-items';
+
+            groups[country].sort((a, b) => a.title.localeCompare(b.title)).forEach(item => {
+              const itemDiv = document.createElement('div');
+              const hasCoords = item.hasCoordinates === true || (item.latitude !== null && item.longitude !== null);
+              itemDiv.className = 'institute-item' + (hasCoords ? '' : ' no-coords');
+              itemDiv.innerText = item.title;
+              itemDiv.title = hasCoords ? item.title : `${item.title} (no coordinates)`;
+              itemDiv.onclick = () => {
+                const ref = markerRefs[item.id || item.title];
+                if (ref) {
+                  const zoomAndOpen = () => {
+                    map.setView(ref.latLng, 5, { animate: true });
+                    setTimeout(() => ref.marker.openPopup(), 200);
+                  };
+
+                  if (enableClustering && typeof markerGroup.zoomToShowLayer === 'function') {
+                    markerGroup.zoomToShowLayer(ref.marker, zoomAndOpen);
+                  } else {
+                    zoomAndOpen();
+                  }
+
+                  if (window.innerWidth <= 768) {
+                    sidebar.classList.add('collapsed');
+                  }
+                }
+              };
+              itemsDiv.appendChild(itemDiv);
+            });
+
+            groupDiv.appendChild(headerDiv);
+            groupDiv.appendChild(itemsDiv);
+            sidebarContent.appendChild(groupDiv);
+          });
+        }
+
+        // Listen for search input changes
+        const searchInput = document.getElementById('search-input');
+        searchInput.addEventListener('input', (e) => {
+          searchQuery = e.target.value;
+          updateFilteredDisplay();
         });
 
+        // Initial setup and render
+        map.addLayer(markerGroup);
+        renderTagFilters();
+        updateFilteredDisplay();
 
-        // Autofit map bounds using only markers that have coordinates
+        // Autofit map bounds initially using all markers that have coordinates
+        const mapMarkers = markersData.filter(item => item.hasCoordinates === true || (item.latitude !== null && item.longitude !== null));
         if (!hasParamCoordinates && mapMarkers.length > 0) {
           map.fitBounds(bounds, { padding: [50, 50] });
         }
