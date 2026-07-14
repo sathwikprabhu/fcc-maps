@@ -47,6 +47,7 @@ app.use(helmet({
   crossOriginEmbedderPolicy: false,
   crossOriginOpenerPolicy: false,
   contentSecurityPolicy: false, // CSP managed separately if needed
+  frameguard: false,
 }));
 
 // ---------------------------------------------------------------------------
