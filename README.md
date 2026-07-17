@@ -7,10 +7,10 @@ If you have a WordPress website with articles or posts containing location info 
 ## Screenshots
 
 ### Admin Portal (Map Editor)
-![Admin Portal](public/assets/admin_screenshot.png)
+![Admin Portal](public/assets/snapshot-admin.png)
 
 ### Frontend (Map Widget Embed)
-![Frontend Map Widget](public/assets/frontend_screenshot.png)
+![Frontend Map Widget](public/assets/snapshot-map.png)
 
 ---
 
