@@ -28,7 +28,7 @@ import {
 
 function AppLayoutInner() {
   const location = useLocation();
-  const { settings, fetchData } = useGlobal();
+  const { branding, fetchData } = useGlobal();
   const { state } = useSidebar();
 
   useEffect(() => {
@@ -47,7 +47,7 @@ function AppLayoutInner() {
   ];
 
   const isCollapsed = state === 'collapsed';
-  const activeTitle = settings.appTitle || 'FCC Maps';
+  const activeTitle = branding.appTitle || 'FCC Maps';
 
   const isActive = (path: string) =>
     location.pathname === path ||
@@ -63,16 +63,16 @@ function AppLayoutInner() {
               <SidebarMenuButton size="lg" asChild tooltip={activeTitle}>
                 <Link to="/" className="flex items-center justify-start w-full">
                   {isCollapsed ? (
-                    settings.logoCollapsedUrl || settings.logoUrl ? (
-                      <img src={settings.logoCollapsedUrl || settings.logoUrl} alt="Logo" className="h-8 w-8 object-contain" />
+                    branding.logoCollapsedUrl || branding.logoUrl ? (
+                      <img src={branding.logoCollapsedUrl || branding.logoUrl} alt="Logo" className="h-8 w-8 object-contain" />
                     ) : (
                       <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
                         <MapIcon className="size-4 shrink-0" />
                       </div>
                     )
                   ) : (
-                    settings.logoUrl ? (
-                      <img src={settings.logoUrl} alt={activeTitle} className="h-8 max-w-full object-contain" />
+                    branding.logoUrl ? (
+                      <img src={branding.logoUrl} alt={activeTitle} className="h-8 max-w-full object-contain" />
                     ) : (
                       <div className="flex items-center gap-2">
                         <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
@@ -162,8 +162,8 @@ function AppLayoutInner() {
         {/* Mobile header — visible only on small screens */}
         <header className="md:hidden sticky top-0 z-40 h-14 border-b flex items-center gap-3 px-4 bg-background">
           <SidebarTrigger className="-ml-1" />
-          {settings.logoUrl ? (
-            <img src={settings.logoUrl} alt={activeTitle} className="h-7 object-contain" />
+          {branding.logoUrl ? (
+            <img src={branding.logoUrl} alt={activeTitle} className="h-7 object-contain" />
           ) : (
             <span className="font-semibold text-sm truncate">{activeTitle}</span>
           )}
