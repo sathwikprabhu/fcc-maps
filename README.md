@@ -1,4 +1,4 @@
-# FCC Maps (CERN Future Circular Collider Project)
+# FCC Maps 
 
 FCC Maps is an interactive, embeddable map generator designed specifically for the Future Circular Collider (FCC) project at CERN. 
 
