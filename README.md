@@ -1,6 +1,6 @@
 # FCC Maps
 
-Create interactive, embeddable maps directly from your WordPress posts—without installing heavy WordPress plugins.
+Create interactive, embeddable maps directly from your WordPress posts without installing heavy WordPress plugins.
 
 If you have a WordPress website with articles or posts containing location info (like latitude, longitude, tags, or categories), FCC Maps automatically grabs that information and displays it on a clean, custom map that you can drop into any website.
 
@@ -25,15 +25,36 @@ Instead of manually maintaining maps or paying monthly fees for premium mapping 
 
 ---
 
+## Setting up your WordPress posts
+
+To make sure FCC Maps can find and pin your locations, format your WordPress posts like this:
+
+### 1. Add Coordinates to the Post Excerpt
+Place the latitude and longitude inside the **Excerpt** box of your WordPress post, separated by a comma.
+* **Format:** `latitude, longitude`
+* **Example:** `45.1234, 6.5678`
+* *Tip:* FCC Maps reads the first pair of decimal numbers it finds in the Excerpt.
+
+### 2. (Optional) Custom website link
+By default, clicking a marker links back to the original WordPress post. If you want a marker to link to a different custom website instead:
+* In your post editor, switch to HTML view and add a link or text wrapped in an element with `id="website-url"`.
+* **Example:** `<a id="website-url" href="https://custom-target.com">Visit Website</a>` or `<div id="website-url">https://custom-target.com</div>`
+
+### 3. Categories, Tags & Photos
+* **Pins colors & filtering:** Map filters and pin colors are based on the standard **Categories** and **Tags** you assign to your posts.
+* **Photos:** If you set a **Featured Image** on your post, it will display as a thumbnail inside the map popup.
+
+---
+
 ## Understanding the Admin Dashboard
 
 The admin panel is designed to be simple and straightforward:
 
-* **Maps** — See all your created maps, add new ones, and adjust settings like default starting view, zoom levels, and filtering rules.
-* **Pointer Colors** — Choose custom pin colors for different categories or tags so your map is easy to read.
-* **Branding** — Upload your logo, add a collapsed version for the sidebar, and set a custom browser favicon/title.
-* **Metrics & Sync** — Check when the last automated sync ran, how many locations were found, or review activity logs if something isn't showing up correctly.
-* **Settings** — Put in your WordPress site address, configure how often it updates, and choose your favorite background map design (like satellite view, clean light grey, or dark mode).
+* **Maps** : See all your created maps, add new ones, and adjust settings like default starting view, zoom levels, and filtering rules.
+* **Pointer Colors** : Choose custom pin colors for different categories or tags so your map is easy to read.
+* **Branding** : Upload your logo, add a collapsed version for the sidebar, and set a custom browser favicon/title.
+* **Metrics & Sync** : Check when the last automated sync ran, how many locations were found, or review activity logs if something isn't showing up correctly.
+* **Settings** : Put in your WordPress site address, configure how often it updates, and choose your favorite background map design (like satellite view, clean light grey, or dark mode).
 
 ---
 
