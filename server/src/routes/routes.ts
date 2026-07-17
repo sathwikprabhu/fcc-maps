@@ -130,6 +130,7 @@ router.put(['/settings', '/maps/:mapId/settings'], standardLimiter, (req: Reques
       logoUrl: typeof body.logoUrl === 'string' ? body.logoUrl.trim() : '',
       logoCollapsedUrl: typeof body.logoCollapsedUrl === 'string' ? body.logoCollapsedUrl.trim() : '',
       appTitle: typeof body.appTitle === 'string' ? body.appTitle.trim() : 'FCC Maps',
+      description: typeof body.description === 'string' ? body.description.trim() : '',
       faviconUrl: typeof body.faviconUrl === 'string' ? body.faviconUrl.trim() : '',
       baseMapUrl: typeof body.baseMapUrl === 'string' ? body.baseMapUrl.trim() : '',
       filterTags: Array.isArray(body.filterTags) ? body.filterTags.filter((t: unknown) => typeof t === 'string') : [],

@@ -24,6 +24,7 @@ export interface Settings {
   logoUrl?: string;
   logoCollapsedUrl?: string;
   appTitle?: string;
+  description?: string;
   faviconUrl?: string;
   baseMapUrl?: string;
   filterTags?: string[];

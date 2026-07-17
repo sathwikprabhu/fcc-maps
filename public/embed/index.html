@@ -24,6 +24,45 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     }
 
+    body {
+      display: flex;
+      flex-direction: column;
+      background: #ffffff;
+    }
+
+    #map-header {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: #ffffff;
+      border-bottom: 1px solid #e4e4e7;
+      z-index: 1001;
+      pointer-events: none;
+    }
+
+    #map-header-inner {
+      padding: 14px 20px 14px 80px;
+      text-align: left;
+    }
+
+    .map-header-title {
+      margin: 0;
+      font-size: 14px;
+      font-weight: 600;
+      line-height: 1.35;
+      color: #09090b;
+      letter-spacing: -0.01em;
+    }
+
+    .map-header-description {
+      margin: 3px 0 0;
+      font-size: 13px;
+      font-weight: 400;
+      line-height: 1.45;
+      color: #71717a;
+    }
+
 
 
     /* Loader styling - ShadCN-inspired */
@@ -207,6 +246,8 @@
       height: 100vh;
       overflow: hidden;
       position: relative;
+      flex: 1 1 auto;
+      min-height: 0;
     }
 
     #sidebar {
@@ -268,6 +309,7 @@
       flex: 1;
       position: relative;
       height: 100%;
+      overflow: hidden;
     }
 
     #map {
@@ -546,7 +588,6 @@
     <div class="loader-text">Loading map...</div>
   </div>
 
-
   <div id="app-container">
     <div id="sidebar" class="collapsed">
       <div id="sidebar-header">
@@ -592,6 +633,12 @@
     </div>
 
     <div id="map-container">
+      <div id="map-header" hidden>
+        <div id="map-header-inner">
+          <h1 id="map-header-title" class="map-header-title"></h1>
+          <p id="map-header-description" class="map-header-description"></p>
+        </div>
+      </div>
       <button id="sidebar-toggle" title="Toggle Sidebar">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
           stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -636,13 +683,16 @@
       let baseMapUrl = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
       let filterTags = [];
       let filterCategories = [];
+      let mapName = '';
+      let mapDescription = '';
 
-      // Try to fetch settings and colors from API
+      // Try to fetch settings, colors, and map metadata from API
       let colorConfig = { categories: {}, tags: {} };
       try {
-        const [settingsRes, colorsRes] = await Promise.all([
+        const [settingsRes, colorsRes, mapsRes] = await Promise.all([
           fetch(`/api/maps/${mapId}/settings`),
-          fetch(`/api/maps/${mapId}/colors`)
+          fetch(`/api/maps/${mapId}/colors`),
+          fetch('/api/maps')
         ]);
 
         if (settingsRes.ok) {
@@ -668,9 +718,7 @@
             filterCategories = settings.filterCategories.map(c => c.trim().toLowerCase());
           }
 
-          if (settings.appTitle) {
-            document.title = settings.appTitle;
-          }
+          mapDescription = settings.description || '';
           if (settings.faviconUrl) {
             let faviconLink = document.querySelector("link[rel~='icon']");
             if (!faviconLink) {
@@ -692,6 +740,7 @@
           if (settings.appTitle) {
             document.title = settings.appTitle;
           }
+          mapDescription = settings.description || mapDescription;
           if (settings.faviconUrl) {
             let link = document.querySelector("link[rel~='icon']");
             if (!link) {
@@ -700,6 +749,27 @@
               document.getElementsByTagName('head')[0].appendChild(link);
             }
             link.href = settings.faviconUrl;
+          }
+
+          if (mapsRes.ok) {
+            const maps = await mapsRes.json();
+            const currentMap = Array.isArray(maps) ? maps.find(entry => entry.id === mapId) : null;
+            mapName = currentMap?.name || '';
+          }
+
+          const mapHeader = document.getElementById('map-header');
+          const mapHeaderTitle = document.getElementById('map-header-title');
+          const mapHeaderDescription = document.getElementById('map-header-description');
+          const headerTitle = mapName || 'Interactive University Map';
+
+          if (mapHeaderTitle) {
+            mapHeaderTitle.textContent = headerTitle;
+          }
+          if (mapHeaderDescription) {
+            mapHeaderDescription.textContent = mapDescription;
+          }
+          if (mapHeader) {
+            mapHeader.hidden = !headerTitle && !mapDescription;
           }
         }
 

@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Dialog,
   DialogContent,
@@ -264,6 +265,17 @@ export default function MapEditor() {
                 value={mapName}
                 onChange={(e) => setMapName(e.target.value)}
                 placeholder="e.g. Europe Campus Map"
+              />
+            </div>
+
+            <div className="space-y-3">
+              <Label htmlFor="map-description">Description</Label>
+              <Textarea
+                id="map-description"
+                value={formSettings.description || ''}
+                onChange={(e) => setFormSettings({ ...formSettings, description: e.target.value })}
+                placeholder="Add a short description that appears in the embed header"
+                className="min-h-[96px] resize-none"
               />
             </div>
 

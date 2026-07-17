@@ -1,10 +1,13 @@
 import express, { Request, Response, NextFunction } from 'express';
+import session from 'express-session';
 import cors from 'cors';
 import helmet from 'helmet';
 import path from 'path';
 import fs from 'fs';
 import dotenv from 'dotenv';
 import apiRouter from './routes/routes';
+import authRouter from './routes/authRoutes';
+import { requireAuth } from './middleware/auth';
 import { scheduler } from './scheduler/scheduler';
 import { storage } from './services/storage';
 
@@ -40,6 +43,11 @@ process.on('uncaughtException', (err) => {
 const app = express();
 const PORT = process.env.PORT || 5050;
 
+const trustProxy = process.env.TRUST_PROXY;
+if (trustProxy) {
+  app.set('trust proxy', trustProxy === 'true' ? 1 : Number(trustProxy));
+}
+
 // Remove X-Powered-By and add security headers via Helmet.
 // Cross-origin-embedder / opener policies are relaxed to allow the Leaflet
 // map embed to load tiles from third-party CDNs.
@@ -48,6 +56,25 @@ app.use(helmet({
   crossOriginOpenerPolicy: false,
   contentSecurityPolicy: false, // CSP managed separately if needed
   frameguard: false,
+}));
+
+// ---------------------------------------------------------------------------
+// Session — required for CERN SSO OIDC flow
+// ---------------------------------------------------------------------------
+const sessionSecret = process.env.SESSION_SECRET;
+if (!sessionSecret) {
+  console.warn('[WARN] SESSION_SECRET is not set. Using a random secret — sessions will not persist across restarts. Set a strong, fixed SESSION_SECRET in production.');
+}
+app.use(session({
+  secret: sessionSecret || require('crypto').randomBytes(32).toString('hex'),
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    httpOnly: true,
+    secure: isProduction, // HTTPS only in production
+    sameSite: 'lax',
+    maxAge: 8 * 60 * 60 * 1000, // 8-hour session (standard working day)
+  },
 }));
 
 // ---------------------------------------------------------------------------
@@ -110,7 +137,23 @@ app.get('/', (_req: Request, res: Response) => {
   res.status(200).send('FCC Maps Server is running');
 });
 
-app.use('/api', apiRouter);
+// Auth routes — must be mounted BEFORE requireAuth middleware
+app.use('/auth', authRouter);
+
+// API routes — protected by SSO if configured
+app.use('/api', requireAuth, apiRouter);
+
+// Admin routes — protected by SSO if configured
+app.get('/admin', requireAuth, (_req: Request, res: Response) => {
+  res.redirect('/admin/');
+});
+app.get('/admin/*', requireAuth, (req: Request, res: Response) => {
+  const ext = path.extname(req.path);
+  if (ext && ext !== '.html') {
+    return res.status(404).json({ error: 'Not found' });
+  }
+  res.sendFile(path.join(publicPath, 'admin/index.html'));
+});
 
 // ---------------------------------------------------------------------------
 // Storage-backed routes
@@ -170,19 +213,7 @@ app.get('/maps/:mapId/markers.json', (req: Request, res: Response) => {
 
 app.use('/uploads', express.static(path.join(storagePath, 'uploads')));
 
-// ---------------------------------------------------------------------------
-// SPA fallback — admin routes only; asset requests (with extensions) get 404
-// ---------------------------------------------------------------------------
-app.get('/admin', (_req: Request, res: Response) => {
-  res.redirect('/admin/');
-});
-app.get('/admin/*', (req: Request, res: Response) => {
-  const ext = path.extname(req.path);
-  if (ext && ext !== '.html') {
-    return res.status(404).json({ error: 'Not found' });
-  }
-  res.sendFile(path.join(publicPath, 'admin/index.html'));
-});
+// SPA fallback — removed from here (moved above with requireAuth)
 
 // ---------------------------------------------------------------------------
 // Global error handler — never expose stack traces to clients

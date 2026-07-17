@@ -39,6 +39,7 @@ export function GlobalProvider({ children }: { children: ReactNode }) {
     enableClustering: true,
     logoUrl: '',
     appTitle: 'FCC Maps',
+    description: '',
     faviconUrl: '',
     baseMapUrl: '',
     filterTags: [],

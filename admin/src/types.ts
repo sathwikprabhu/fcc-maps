@@ -22,6 +22,7 @@ export interface Settings {
   enableClustering: boolean;
   logoUrl?: string;
   appTitle?: string;
+  description?: string;
   faviconUrl?: string;
   baseMapUrl?: string;
   filterTags?: string[];

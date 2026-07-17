@@ -28,6 +28,7 @@ const DEFAULT_SETTINGS: Settings = {
   logoUrl: '',
   logoCollapsedUrl: '',
   appTitle: 'FCC Maps',
+  description: '',
   faviconUrl: '',
   baseMapUrl: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
   filterTags: [],

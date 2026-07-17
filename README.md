@@ -121,6 +121,18 @@ If you just added a new post and want it to show up right away:
    ```
 3. Open `http://localhost:5174/admin/` in your browser to start configuring your map.
 
+### Local CERN SSO test
+1. Copy `server/.env.example` to `server/.env` and fill in your CERN values.
+2. Make sure CERN has whitelisted this redirect URI for the app: `http://localhost:5050/auth/callback`.
+3. Set `OIDC_REQUIRED_GROUPS` in `server/.env`. You can use one group or a comma-separated list if the CERN e-group name changes later.
+4. Start the backend and frontend:
+   ```bash
+   npm run dev
+   ```
+5. Open `http://localhost:5050/admin/`.
+6. If the CERN group check is configured correctly, unauthenticated access should redirect to CERN SSO, users outside the group should see `403 Access Denied`, and users inside the group should land on the admin dashboard.
+7. The public map/embed endpoints should still work without login, including `/embed` and the sync endpoint `/api/maps/default/sync`.
+
 ### Deploying to production
 To run this application permanently on a server:
 ```bash
