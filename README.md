@@ -1,8 +1,8 @@
-# FCC Maps
+# FCC Maps (CERN Future Circular Collider Project)
 
-Create interactive, embeddable maps directly from your WordPress posts without installing heavy WordPress plugins.
+FCC Maps is an interactive, embeddable map generator designed specifically for the Future Circular Collider (FCC) project at CERN. 
 
-If you have a WordPress website with articles or posts containing location info (like latitude, longitude, tags, or categories), FCC Maps automatically grabs that information and displays it on a clean, custom map that you can drop into any website.
+Due to the security constraints and limitations of CERN's stripped-down version of WordPress (which prevents the installation of arbitrary third-party mapping plugins), this application acts as an independent tool. It reads your WordPress articles via the standard REST API, parses geographical information, and builds customizable map widgets that you can easily embed back into CERN websites or portals.
 
 ## Screenshots
 
@@ -16,18 +16,18 @@ If you have a WordPress website with articles or posts containing location info 
 
 ## How it helps you
 
-Instead of manually maintaining maps or paying monthly fees for premium mapping tools, FCC Maps lets you:
+Instead of manually maintaining map assets or struggling with CMS restrictions, FCC Maps lets you:
 
 * **Use your existing content:** Every time you publish a post on WordPress with coordinates, it automatically shows up on your map.
-* **Keep your website fast:** The maps are super lightweight and run independently, so they won't slow down your WordPress site.
+* **Work around CERN CMS restrictions:** Since it reads content via the standard API, you do not need to install any custom plugins inside WordPress.
 * **Make custom views:** You can filter markers to show different maps (e.g., only "Featured Locations" or locations in "Europe") using the same WordPress list.
 * **Put it anywhere:** You get a simple code snippet to copy/paste your map into any page, builder, or site.
 
 ---
 
-## Setting up your WordPress posts
+## Setting up your WordPress posts & Connection
 
-To make sure FCC Maps can find and pin your locations, format your WordPress posts like this:
+To make sure FCC Maps can find and pin your locations, format your WordPress posts and configure your credentials like this:
 
 ### 1. Add Coordinates to the Post Excerpt
 Place the latitude and longitude inside the **Excerpt** box of your WordPress post, separated by a comma.
@@ -43,6 +43,15 @@ By default, clicking a marker links back to the original WordPress post. If you 
 ### 3. Categories, Tags & Photos
 * **Pins colors & filtering:** Map filters and pin colors are based on the standard **Categories** and **Tags** you assign to your posts.
 * **Photos:** If you set a **Featured Image** on your post, it will display as a thumbnail inside the map popup.
+
+### 4. How to generate WordPress API Credentials
+If your WordPress REST API is restricted or private, you need to provide credentials:
+1. Log into your WordPress admin dashboard.
+2. Go to **Users** > **Profile** (or **All Users** and edit your user account).
+3. Scroll down to the **Application Passwords** section.
+4. Enter a name for the credentials (e.g., `FCC Maps`) and click **Add New Application Password**.
+5. Copy the generated password (a 24-character code). *This is only shown once.*
+6. In the FCC Maps Admin panel under **Settings**, turn on **Require Authentication**, then input your standard WordPress username and this generated Application Password.
 
 ---
 
