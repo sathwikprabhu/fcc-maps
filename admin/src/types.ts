@@ -24,6 +24,11 @@ export interface Settings {
   appTitle?: string;
   faviconUrl?: string;
   baseMapUrl?: string;
+  filterTags?: string[];
+  filterCategories?: string[];
+  hasCredentials?: boolean;
+  mapTilerApiKey?: string;
+  logoCollapsedUrl?: string;
 }
 
 export interface SyncStats {

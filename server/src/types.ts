@@ -22,9 +22,14 @@ export interface Settings {
   defaultZoom: number;
   enableClustering: boolean;
   logoUrl?: string;
+  logoCollapsedUrl?: string;
   appTitle?: string;
   faviconUrl?: string;
   baseMapUrl?: string;
+  filterTags?: string[];
+  filterCategories?: string[];
+  hasCredentials?: boolean;
+  mapTilerApiKey?: string;
 }
 
 export interface SyncStats {

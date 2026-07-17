@@ -4,66 +4,79 @@ import { storage } from '../services/storage';
 import { Marker, Settings, SyncStatus, SyncStats } from '../types';
 
 export class SchedulerService {
-  private timer: NodeJS.Timeout | null = null;
-  private isSyncing = false;
-  private lastHash: string | null = null;
+  private timers: Map<string, NodeJS.Timeout> = new Map();
+  private syncingStatus: Map<string, boolean> = new Map();
+  private lastHashes: Map<string, string> = new Map();
 
   constructor() {
-    // Load last hash from status if available
-    const status = storage.getStatus();
-    // We will store the hash in status.stats (extending it or storing it as metadata)
-    // For simplicity, let's read/write hash on the status object itself.
-    // Let's cast status to any to retrieve apiHash if it was saved.
-    this.lastHash = (status as any).apiHash || null;
+    // Hashes will be populated dynamically as sync runs
   }
 
   public start(): void {
     storage.addLog('info', 'Scheduler service started');
-    this.scheduleNext();
     
-    // Run an initial sync in background on startup if never synced or if server restarted
-    const status = storage.getStatus();
+    // Only start background sync job for the default map (global dataset)
+    this.scheduleNext('default');
+    
+    const status = storage.getStatus('default');
     if (!status.lastSyncTime) {
-      this.sync().catch(err => {
-        storage.addLog('error', 'Initial sync on startup failed', String(err));
+      this.sync('default').catch(err => {
+        storage.addLog('error', `Initial sync on startup failed`, String(err), 'default');
       });
     }
   }
 
   public stop(): void {
-    if (this.timer) {
-      clearTimeout(this.timer);
-      this.timer = null;
-    }
+    this.timers.forEach((timer, mapId) => {
+      clearTimeout(timer);
+      storage.addLog('info', 'Scheduler job stopped', undefined, mapId);
+    });
+    this.timers.clear();
     storage.addLog('info', 'Scheduler service stopped');
   }
 
-  public reschedule(): void {
-    storage.addLog('info', 'Rescheduling sync job due to settings change');
-    this.lastHash = null; // Reset hash to force markers.json rebuild on settings change
-    this.stop();
-    this.scheduleNext();
+  public stopMapJob(mapId: string): void {
+    const timer = this.timers.get(mapId);
+    if (timer) {
+      clearTimeout(timer);
+      this.timers.delete(mapId);
+      this.syncingStatus.delete(mapId);
+      this.lastHashes.delete(mapId);
+      storage.addLog('info', 'Scheduler job stopped for map', undefined, mapId);
+    }
   }
 
-  private scheduleNext(): void {
-    const settings = storage.getSettings();
+  public rescheduleMap(mapId: string): void {
+    if (mapId !== 'default') {
+      return; // Only default map runs a sync schedule
+    }
+    storage.addLog('info', 'Rescheduling sync job due to settings change', undefined, mapId);
+    this.lastHashes.delete(mapId); // Reset hash to force markers.json rebuild on settings change
+    this.stopMapJob(mapId);
+    this.scheduleNext(mapId);
+  }
+
+  private scheduleNext(mapId: string): void {
+    const settings = storage.getSettings(mapId);
     const intervalHours = settings.syncIntervalHours || 12;
     const intervalMs = intervalHours * 60 * 60 * 1000;
 
     // Update status to show when next sync is
-    const status = storage.getStatus();
+    const status = storage.getStatus(mapId);
     status.nextSyncTime = new Date(Date.now() + intervalMs).toISOString();
-    storage.saveStatus(status);
+    storage.saveStatus(status, mapId);
 
-    this.timer = setTimeout(() => {
-      this.sync()
+    const timer = setTimeout(() => {
+      this.sync(mapId)
         .catch(err => {
-          storage.addLog('error', 'Scheduled sync failed', String(err));
+          storage.addLog('error', 'Scheduled sync failed', String(err), mapId);
         })
         .finally(() => {
-          this.scheduleNext();
+          this.scheduleNext(mapId);
         });
     }, intervalMs);
+
+    this.timers.set(mapId, timer);
   }
 
   private stripHtml(html: string): string {
@@ -72,8 +85,6 @@ export class SchedulerService {
 
   private parseCoordinates(excerpt: string): { lat: number; lng: number } | null {
     const cleanExcerpt = this.stripHtml(excerpt);
-    // Look for numbers like: 46.23307388854503, 6.055512805451645
-    // Matches positive or negative floats separated by comma (and optional spaces)
     const match = cleanExcerpt.match(/(-?\d+\.\d+)\s*,\s*(-?\d+\.\d+)/);
     if (!match) return null;
 
@@ -88,52 +99,46 @@ export class SchedulerService {
   private parseWebsiteUrl(content: string): string | null {
     if (!content) return null;
     
-    // Search for element with id="website-url"
     const match = content.match(/<[^>]*id=["']website-url["'][^>]*>([\s\S]*?)<\/[^>]+>/i);
-    if (!match) return null;
-
-    const innerHtml = match[1].trim();
-
-    // Check if it contains an anchor tag with href
-    const hrefMatch = innerHtml.match(/href=["']([^"']+)["']/i);
-    if (hrefMatch) {
-      return hrefMatch[1].trim();
+    if (match) {
+      const innerHtml = match[1].trim();
+      const hrefMatch = innerHtml.match(/href=["']([^"']+)["']/i);
+      if (hrefMatch) {
+        return hrefMatch[1].trim();
+      }
+      const plainText = innerHtml.replace(/<[^>]*>/g, '').trim();
+      if (plainText) {
+        if (!/^https?:\/\//i.test(plainText)) {
+          return `http://${plainText}`;
+        }
+        return plainText;
+      }
     }
-
-    // Otherwise, strip HTML tags and return clean text
-    const plainText = innerHtml.replace(/<[^>]*>/g, '').trim();
-    if (!plainText) return null;
-
-    // Ensure it has a protocol prefix
-    if (!/^https?:\/\//i.test(plainText)) {
-      return `http://${plainText}`;
-    }
-
-    return plainText;
+    return null;
   }
 
-  public async sync(manual = false): Promise<void> {
-    if (this.isSyncing) {
-      storage.addLog('warn', 'Sync already in progress, skipping execution');
+  public async sync(mapId: string = 'default', manual = false): Promise<void> {
+    if (this.syncingStatus.get(mapId)) {
+      storage.addLog('warn', 'Sync already in progress, skipping execution', undefined, mapId);
       return;
     }
 
-    this.isSyncing = true;
-    const settings = storage.getSettings();
-    const status = storage.getStatus();
+    this.syncingStatus.set(mapId, true);
+    const settings = storage.getSettings(mapId);
+    const status = storage.getStatus(mapId);
     
     status.status = 'syncing';
-    storage.saveStatus(status);
+    storage.saveStatus(status, mapId);
     
-    storage.addLog('info', `Starting synchronization (${manual ? 'Manual' : 'Scheduled'})`, `API URL: ${settings.wpApiUrl || 'None configured'}`);
+    storage.addLog('info', `Starting synchronization (${manual ? 'Manual' : 'Scheduled'})`, `API URL: ${settings.wpApiUrl || 'None configured'}`, mapId);
 
     if (!settings.wpApiUrl) {
       const errorMsg = 'WordPress API URL is not configured. Sync skipped.';
       status.status = 'failed';
       status.lastError = errorMsg;
-      storage.saveStatus(status);
-      storage.addLog('error', errorMsg);
-      this.isSyncing = false;
+      storage.saveStatus(status, mapId);
+      storage.addLog('error', errorMsg, undefined, mapId);
+      this.syncingStatus.set(mapId, false);
       return;
     }
 
@@ -151,16 +156,15 @@ export class SchedulerService {
         const errStr = error instanceof Error && (error as any).cause
           ? `${error.message} (Cause: ${(error as any).cause.message || String((error as any).cause)})`
           : String(error);
-        storage.addLog('warn', `Fetch attempt ${attempt}/${maxRetries} failed`, errStr);
+        storage.addLog('warn', `Fetch attempt ${attempt}/${maxRetries} failed`, errStr, mapId);
         if (attempt < maxRetries) {
-          // Wait 5 seconds before retrying
           await new Promise(resolve => setTimeout(resolve, 5000));
         } else {
           status.status = 'failed';
           status.lastError = `Failed to fetch after ${maxRetries} attempts: ${errStr}`;
-          storage.saveStatus(status);
-          storage.addLog('error', `Sync failed: ${errStr}`);
-          this.isSyncing = false;
+          storage.saveStatus(status, mapId);
+          storage.addLog('error', `Sync failed: ${errStr}`, undefined, mapId);
+          this.syncingStatus.set(mapId, false);
           return;
         }
       }
@@ -168,7 +172,6 @@ export class SchedulerService {
 
     // Process posts if fetch succeeded
     try {
-      // Calculate API content hash
       const contentStr = JSON.stringify(allPosts);
       const hash = crypto.createHash('sha256').update(contentStr).digest('hex');
 
@@ -183,7 +186,6 @@ export class SchedulerService {
           continue;
         }
 
-        // Extract metadata: category, country, featured image
         let category = 'Uncategorized';
         let country = 'Unknown';
         const tags: string[] = [];
@@ -214,7 +216,6 @@ export class SchedulerService {
           if (extractedUrl) url = extractedUrl;
         }
 
-        // Try to parse coordinates — posts without coords are still included
         let lat: number | null = null;
         let lng: number | null = null;
         let hasCoordinates = false;
@@ -228,23 +229,22 @@ export class SchedulerService {
               lng = Number(parsedLng.toFixed(5));
               hasCoordinates = true;
 
-              // Handle duplicate coordinates
               const coordKey = `${lat},${lng}`;
               if (coordSet.has(coordKey)) {
                 duplicateCoordinatesCount++;
                 if (!settings.enableClustering) {
-                  storage.addLog('warn', `Validation Skip: Duplicate coordinates for Post ID ${post.id} ("${post.title.rendered}")`, `Coords: ${lat}, ${lng}`);
-                  hasCoordinates = false; // exclude from map but still include in CSV
+                  storage.addLog('warn', `Validation Skip: Duplicate coordinates for Post ID ${post.id} ("${post.title.rendered}")`, `Coords: ${lat}, ${lng}`, mapId);
+                  hasCoordinates = false;
                 }
               }
               if (hasCoordinates) coordSet.add(coordKey);
             } else {
               invalidPostsCount++;
-              storage.addLog('warn', `Post ID ${post.id} ("${post.title.rendered}") coordinates out of bounds.`, `Coords: ${parsedLat}, ${parsedLng}`);
+              storage.addLog('warn', `Post ID ${post.id} ("${post.title.rendered}") coordinates out of bounds.`, `Coords: ${parsedLat}, ${parsedLng}`, mapId);
             }
           } else {
             invalidPostsCount++;
-            storage.addLog('warn', `Post ID ${post.id} ("${post.title.rendered}") has no coordinates — included in export only.`);
+            storage.addLog('warn', `Post ID ${post.id} ("${post.title.rendered}") has no coordinates — included in export only.`, undefined, mapId);
           }
         } else {
           invalidPostsCount++;
@@ -264,43 +264,41 @@ export class SchedulerService {
         });
       }
 
-      // Check if hash matches the previous hash (skip check on manual sync)
-      if (!manual && hash === this.lastHash && storage.getMarkersSize() > 0) {
-        storage.addLog('info', 'No content changes detected. Skip regenerating markers.json.');
+      const lastHash = this.lastHashes.get(mapId) || null;
+      if (!manual && hash === lastHash && storage.getMarkersSize(mapId) > 0) {
+        storage.addLog('info', 'No content changes detected. Skip regenerating markers.json.', undefined, mapId);
       } else {
-        // Content changed, write markers.json (all posts)
-        const sizeBytes = storage.saveMarkers(markers);
-        this.lastHash = hash;
+        const sizeBytes = storage.saveMarkers(markers, mapId);
+        this.lastHashes.set(mapId, hash);
         const withCoords = markers.filter(m => m.hasCoordinates).length;
-        storage.addLog('info', `Successfully regenerated markers.json with ${markers.length} total entries (${withCoords} with coordinates, ${(sizeBytes / 1024).toFixed(2)} KB)`);
+        storage.addLog('info', `Successfully regenerated markers.json with ${markers.length} total entries (${withCoords} with coordinates, ${(sizeBytes / 1024).toFixed(2)} KB)`, undefined, mapId);
       }
 
-      // Update sync statistics
       const finalStats: SyncStats = {
         markerCount: markers.filter(m => m.hasCoordinates).length,
         allPostsCount: markers.length,
         invalidPostsCount,
         duplicateCoordinatesCount,
-        jsonFileSize: storage.getMarkersSize(),
+        jsonFileSize: storage.getMarkersSize(mapId),
       };
 
       status.lastSyncTime = new Date().toISOString();
       status.status = 'idle';
       status.lastError = null;
       status.stats = finalStats;
-      (status as any).apiHash = this.lastHash;
+      (status as any).apiHash = hash;
 
-      storage.saveStatus(status);
-      storage.addLog('info', 'Sync completed successfully');
+      storage.saveStatus(status, mapId);
+      storage.addLog('info', 'Sync completed successfully', undefined, mapId);
 
     } catch (processError) {
       const errStr = String(processError);
       status.status = 'failed';
       status.lastError = `Error processing WordPress posts: ${errStr}`;
-      storage.saveStatus(status);
-      storage.addLog('error', `Sync processing error: ${errStr}`);
+      storage.saveStatus(status, mapId);
+      storage.addLog('error', `Sync processing error: ${errStr}`, undefined, mapId);
     } finally {
-      this.isSyncing = false;
+      this.syncingStatus.set(mapId, false);
     }
   }
 
@@ -310,7 +308,6 @@ export class SchedulerService {
     const perPage = 100;
     let fetchMore = true;
 
-    // Build auth headers
     const headers: Record<string, string> = {
       'Accept': 'application/json',
     };
@@ -321,18 +318,13 @@ export class SchedulerService {
 
     while (fetchMore) {
       const separator = settings.wpApiUrl.includes('?') ? '&' : '?';
-      // Request embedded fields (e.g. categories, media) to get images and terms in one call
       const url = `${settings.wpApiUrl}${separator}page=${page}&per_page=${perPage}&_embed=1`;
 
-      // Only bypass TLS cert validation if explicitly opted in via env var.
-      // This should ONLY be used for known self-signed cert environments (e.g. CERN intranet).
-      // NEVER set this in production unless you understand the MITM risk.
       const allowSelfSigned = process.env.ALLOW_SELF_SIGNED_CERTS === 'true';
       const agent = new https.Agent({ rejectUnauthorized: !allowSelfSigned });
       const response = await fetch(url, { headers, agent } as any);
 
       if (!response.ok) {
-        // If we get a 400 page error on page > 1, it means we hit the end of pages in WordPress pagination.
         if (page > 1 && (response.status === 400 || response.status === 404)) {
           fetchMore = false;
           break;
@@ -348,7 +340,6 @@ export class SchedulerService {
 
       allPosts = allPosts.concat(posts);
 
-      // If we got fewer posts than requested, we've reached the end
       if (posts.length < perPage) {
         fetchMore = false;
       } else {

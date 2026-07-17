@@ -69,6 +69,11 @@
       }
     }
 
+    /* Disable Leaflet's default coordinate transition which causes top-left slide */
+    .leaflet-popup {
+      transition: none !important;
+    }
+
     /* Custom Popup Styling - ShadCN Card-inspired */
     .custom-popup .leaflet-popup-content-wrapper {
       background: #ffffff;
@@ -414,6 +419,35 @@
       gap: 12px;
     }
 
+    .search-row {
+      display: flex;
+      gap: 8px;
+      width: 100%;
+    }
+
+    .toggle-all-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      min-width: 36px;
+      border-radius: 6px;
+      border: 1px solid #e4e4e7;
+      background-color: #ffffff;
+      color: #71717a;
+      cursor: pointer;
+      box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      outline: none;
+      transition: background-color 0.15s, color 0.15s, border-color 0.15s;
+    }
+
+    .toggle-all-btn:hover {
+      background-color: #f4f4f5;
+      color: #18181b;
+      border-color: #d4d4d8;
+    }
+
     .search-container {
       position: relative;
       width: 100%;
@@ -516,9 +550,30 @@
   <div id="app-container">
     <div id="sidebar" class="collapsed">
       <div id="sidebar-header">
-        <div class="search-container">
-          <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-          <input type="text" id="search-input" class="search-input" placeholder="Search..." />
+        <div class="search-row">
+          <div class="search-container">
+            <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
+              fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input type="text" id="search-input" class="search-input" placeholder="Search..." />
+          </div>
+          <button id="toggle-all-btn" class="toggle-all-btn" title="Expand All">
+            <!-- Expand all SVG (chevrons-down) -->
+            <svg class="expand-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+              fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m7 6 5 5 5-5" />
+              <path d="m7 13 5 5 5-5" />
+            </svg>
+            <!-- Collapse all SVG (chevrons-up) -->
+            <svg class="collapse-icon" style="display: none;" xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+              viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+              stroke-linejoin="round">
+              <path d="m17 18-5-5-5 5" />
+              <path d="m17 11-5-5-5 5" />
+            </svg>
+          </button>
         </div>
         <div id="tag-filters" class="tag-filters"></div>
       </div>
@@ -561,24 +616,33 @@
 
       // Parse URL parameters
       const urlParams = new URLSearchParams(window.location.search);
+      const mapId = urlParams.get('map') || 'default';
       const paramLat = urlParams.get('lat');
       const paramLng = urlParams.get('lng');
       const paramZoom = urlParams.get('zoom');
       const isPreview = urlParams.get('preview') === '1';
       const paramBaseMapUrl = urlParams.get('baseMapUrl');
 
-      let defaultLat = 46.23307;
-      let defaultLng = 6.05551;
+      // Update export CSV button URL
+      const exportCsvBtn = document.getElementById('export-csv-btn');
+      if (exportCsvBtn) {
+        exportCsvBtn.href = `/api/maps/${mapId}/export-csv`;
+      }
+
+      let defaultLat = 45;
+      let defaultLng = 6;
       let defaultZoom = 3;
       let enableClustering = true;
       let baseMapUrl = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
+      let filterTags = [];
+      let filterCategories = [];
 
       // Try to fetch settings and colors from API
       let colorConfig = { categories: {}, tags: {} };
       try {
         const [settingsRes, colorsRes] = await Promise.all([
-          fetch('/api/settings'),
-          fetch('/api/colors')
+          fetch(`/api/maps/${mapId}/settings`),
+          fetch(`/api/maps/${mapId}/colors`)
         ]);
 
         if (settingsRes.ok) {
@@ -587,8 +651,43 @@
           if (settings.defaultLng) defaultLng = parseFloat(settings.defaultLng);
           if (settings.defaultZoom) defaultZoom = parseInt(settings.defaultZoom, 10);
           if (settings.enableClustering !== undefined) enableClustering = settings.enableClustering;
-          if (settings.baseMapUrl) baseMapUrl = settings.baseMapUrl;
-          if (paramBaseMapUrl) baseMapUrl = paramBaseMapUrl;
+          const paramClustering = urlParams.get('clustering');
+          if (paramClustering !== null) {
+            enableClustering = paramClustering === '1';
+          }
+          if (settings.baseMapUrl) {
+            baseMapUrl = settings.baseMapUrl.replace('{apiKey}', settings.mapTilerApiKey || '');
+          }
+          if (paramBaseMapUrl) {
+            baseMapUrl = paramBaseMapUrl.replace('{apiKey}', settings.mapTilerApiKey || '');
+          }
+          if (settings.filterTags) {
+            filterTags = settings.filterTags.map(t => t.trim().toLowerCase());
+          }
+          if (settings.filterCategories) {
+            filterCategories = settings.filterCategories.map(c => c.trim().toLowerCase());
+          }
+
+          if (settings.appTitle) {
+            document.title = settings.appTitle;
+          }
+          if (settings.faviconUrl) {
+            let faviconLink = document.querySelector("link[rel~='icon']");
+            if (!faviconLink) {
+              faviconLink = document.createElement('link');
+              faviconLink.rel = 'icon';
+              document.head.appendChild(faviconLink);
+            }
+            faviconLink.href = settings.faviconUrl;
+          }
+
+          // URL parameters override settings
+          if (urlParams.get('tags')) {
+            filterTags = urlParams.get('tags').split(',').map(t => t.trim().toLowerCase()).filter(Boolean);
+          }
+          if (urlParams.get('categories')) {
+            filterCategories = urlParams.get('categories').split(',').map(c => c.trim().toLowerCase()).filter(Boolean);
+          }
 
           if (settings.appTitle) {
             document.title = settings.appTitle;
@@ -654,9 +753,14 @@
       // Initialize map
       const map = L.map('map', {
         zoomControl: false,
-        attributionControl: true,
+        attributionControl: false, // Custom attribution control added below to ensure Leaflet link opens in new tab
         minZoom: 3
       }).setView([initialLat, initialLng], initialZoom);
+
+      L.control.attribution({
+        position: 'bottomright',
+        prefix: '<a href="https://leafletjs.com" title="A JS library for interactive maps" target="_blank" rel="noopener noreferrer">Leaflet</a>'
+      }).addTo(map);
 
       L.control.zoom({
         position: 'bottomright'
@@ -686,15 +790,29 @@
       }
 
       try {
-        const markersRes = await fetch('/markers.json');
+        const markersRes = await fetch(`/maps/${mapId}/markers.json`);
         if (!markersRes.ok) {
-          throw new Error('Failed to fetch markers.json');
+          throw new Error(`Failed to fetch markers for map ${mapId}`);
         }
 
         const markersData = await markersRes.json();
 
-        if (markersData.length === 0) {
-          loader.querySelector('.loader-text').innerText = 'No markers found.';
+        // Apply tags & categories configuration filters
+        const activeMarkersData = markersData.filter(item => {
+          if (filterTags.length > 0) {
+            const itemTags = (item.tags && Array.isArray(item.tags)) ? item.tags.map(t => t.toLowerCase()) : [];
+            const hasMatchingTag = itemTags.some(t => filterTags.includes(t));
+            if (!hasMatchingTag) return false;
+          }
+          if (filterCategories.length > 0) {
+            const itemCat = item.category ? item.category.toLowerCase() : '';
+            if (!filterCategories.includes(itemCat)) return false;
+          }
+          return true;
+        });
+
+        if (activeMarkersData.length === 0) {
+          loader.querySelector('.loader-text').innerText = 'No markers found matching filters.';
           setTimeout(() => loader.style.opacity = 0, 1000);
           setTimeout(() => loader.style.visibility = 'hidden', 1400);
           return;
@@ -728,7 +846,7 @@
         const markerRefs = {};
 
         // Build all markers and save references once
-        markersData.forEach(item => {
+        activeMarkersData.forEach(item => {
           const lat = parseFloat(item.latitude);
           const lng = parseFloat(item.longitude);
 
@@ -794,10 +912,11 @@
         // Initialize filtering variables
         let selectedTag = null;
         let searchQuery = '';
+        let allExpanded = false;
 
         // Extract unique tags from markers
         const allTags = new Set();
-        markersData.forEach(item => {
+        activeMarkersData.forEach(item => {
           if (item.tags && Array.isArray(item.tags)) {
             item.tags.forEach(tag => {
               if (tag) allTags.add(tag);
@@ -841,13 +960,13 @@
           const query = searchQuery.trim().toLowerCase();
 
           // Filter items based on active tags & search
-          const filteredItems = markersData.filter(item => {
-            const matchesSearch = !query || 
+          const filteredItems = activeMarkersData.filter(item => {
+            const matchesSearch = !query ||
               (item.title && item.title.toLowerCase().includes(query)) ||
               (item.country && item.country.toLowerCase().includes(query)) ||
               (item.category && item.category.toLowerCase().includes(query));
 
-            const matchesTag = !selectedTag || 
+            const matchesTag = !selectedTag ||
               (item.tags && Array.isArray(item.tags) && item.tags.includes(selectedTag));
 
             return matchesSearch && matchesTag;
@@ -885,8 +1004,7 @@
           // Render groups
           Object.keys(groups).sort().forEach(country => {
             const groupDiv = document.createElement('div');
-            const isFiltering = query.length > 0 || selectedTag !== null;
-            groupDiv.className = 'country-group' + (isFiltering ? ' open' : '');
+            groupDiv.className = 'country-group' + (allExpanded ? ' open' : '');
 
             const headerDiv = document.createElement('div');
             headerDiv.className = 'country-header';
@@ -939,16 +1057,68 @@
           updateFilteredDisplay();
         });
 
+        // Listen for expand/collapse all button click
+        const toggleAllBtn = document.getElementById('toggle-all-btn');
+        const expandIcon = toggleAllBtn.querySelector('.expand-icon');
+        const collapseIcon = toggleAllBtn.querySelector('.collapse-icon');
+
+        toggleAllBtn.addEventListener('click', () => {
+          allExpanded = !allExpanded;
+
+          if (allExpanded) {
+            toggleAllBtn.title = 'Collapse All';
+            expandIcon.style.display = 'none';
+            collapseIcon.style.display = 'inline-block';
+          } else {
+            toggleAllBtn.title = 'Expand All';
+            expandIcon.style.display = 'inline-block';
+            collapseIcon.style.display = 'none';
+          }
+
+          const groups = sidebarContent.querySelectorAll('.country-group');
+          groups.forEach(g => {
+            if (allExpanded) {
+              g.classList.add('open');
+            } else {
+              g.classList.remove('open');
+            }
+          });
+        });
+
         // Initial setup and render
         map.addLayer(markerGroup);
         renderTagFilters();
         updateFilteredDisplay();
 
         // Autofit map bounds initially using all markers that have coordinates
-        const mapMarkers = markersData.filter(item => item.hasCoordinates === true || (item.latitude !== null && item.longitude !== null));
+        const mapMarkers = activeMarkersData.filter(item => item.hasCoordinates === true || (item.latitude !== null && item.longitude !== null));
         if (!hasParamCoordinates && mapMarkers.length > 0) {
           map.fitBounds(bounds, { padding: [50, 50] });
         }
+
+        // Notify parent admin frame of map movements/zooming
+        function notifyParent() {
+          if (window.parent && window.parent !== window) {
+            const center = map.getCenter();
+            window.parent.postMessage({
+              type: 'map_move',
+              lat: center.lat,
+              lng: center.lng,
+              zoom: map.getZoom()
+            }, '*');
+          }
+        }
+        map.on('moveend', notifyParent);
+        map.on('zoomend', notifyParent);
+
+        // Listen for view adjustments from the parent admin sliders
+        window.addEventListener('message', (event) => {
+          if (event.origin !== window.location.origin) return;
+          const data = event.data;
+          if (data && data.type === 'set_map_view') {
+            map.setView([data.lat, data.lng], data.zoom, { animate: true });
+          }
+        });
 
         // Hide loader
         loader.style.opacity = 0;

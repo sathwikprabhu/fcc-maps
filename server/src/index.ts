@@ -118,11 +118,54 @@ app.use('/api', apiRouter);
 const storagePath = path.join(__dirname, '../storage');
 
 app.get('/markers.json', (_req: Request, res: Response) => {
-  const markersFile = path.join(storagePath, 'markers.json');
+  const markersFile = path.join(storagePath, 'maps/default/markers.json');
   if (!fs.existsSync(markersFile)) {
     return res.json([]);
   }
   res.sendFile(markersFile);
+});
+
+app.get('/maps/:mapId/markers.json', (req: Request, res: Response) => {
+  const mapId = req.params.mapId.replace(/[^a-zA-Z0-9\-_]/g, '');
+  const defaultMarkersFile = path.join(storagePath, 'maps/default/markers.json');
+  if (!fs.existsSync(defaultMarkersFile)) {
+    return res.json([]);
+  }
+
+  try {
+    const rawData = fs.readFileSync(defaultMarkersFile, 'utf-8');
+    const markers = JSON.parse(rawData);
+
+    if (mapId === 'default') {
+      return res.json(markers);
+    }
+
+    const settingsFile = path.join(storagePath, 'config/maps', mapId, 'settings.json');
+    if (!fs.existsSync(settingsFile)) {
+      return res.json(markers);
+    }
+
+    const settings = JSON.parse(fs.readFileSync(settingsFile, 'utf-8'));
+    const filterTags = Array.isArray(settings.filterTags) ? settings.filterTags : [];
+    const filterCategories = Array.isArray(settings.filterCategories) ? settings.filterCategories : [];
+
+    let filteredMarkers = markers;
+    if (filterTags.length > 0) {
+      filteredMarkers = filteredMarkers.filter((m: any) =>
+        m.tags && Array.isArray(m.tags) && m.tags.some((t: string) => filterTags.includes(t))
+      );
+    }
+    if (filterCategories.length > 0) {
+      filteredMarkers = filteredMarkers.filter((m: any) =>
+        m.category && filterCategories.includes(m.category)
+      );
+    }
+
+    return res.json(filteredMarkers);
+  } catch (error) {
+    console.error('Error serving filtered map markers:', error);
+    return res.status(500).json({ error: 'Failed to retrieve map markers' });
+  }
 });
 
 app.use('/uploads', express.static(path.join(storagePath, 'uploads')));
