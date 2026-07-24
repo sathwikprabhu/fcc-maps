@@ -36,11 +36,11 @@ let oidcConfig: Configuration | null = null;
 
 export function isCernSsoEnabled(): boolean {
   const value = process.env.CERN_SSO_ENABLED;
-  if (value === undefined) {
-    return true;
+  if (value === undefined || value.trim() === '') {
+    return false;
   }
 
-  return !['false', '0', 'no', 'off'].includes(value.trim().toLowerCase());
+  return ['true', '1', 'yes', 'on'].includes(value.trim().toLowerCase());
 }
 
 /**
