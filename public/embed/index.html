@@ -44,6 +44,12 @@
     #map-header-inner {
       padding: 14px 20px 14px 80px;
       text-align: left;
+      min-height: 70px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: stretch;
     }
 
     .map-header-title {
@@ -984,21 +990,35 @@
         let searchQuery = '';
         let allExpanded = false;
 
-        // Extract unique tags from markers
+        // Extract unique tags visible in the current filtered set.
+        // When filterTags is active (map restricted to certain tags), only collect
+        // tags that are in that allowed set — so multi-tagged items don't leak
+        // irrelevant tags into the sidebar filter bar.
         const allTags = new Set();
         activeMarkersData.forEach(item => {
           if (item.tags && Array.isArray(item.tags)) {
             item.tags.forEach(tag => {
-              if (tag) allTags.add(tag);
+              if (!tag) return;
+              // If the map has a tag restriction, only surface tags in that list
+              if (filterTags.length > 0 && !filterTags.includes(tag.trim().toLowerCase())) return;
+              allTags.add(tag);
             });
           }
         });
         const sortedTags = Array.from(allTags).sort();
 
-        // Render tag badges dynamically
+        // Render tag badges dynamically.
+        // Hide the entire filter bar when there is only one tag — no useful choice to make.
         const tagFiltersContainer = document.getElementById('tag-filters');
         function renderTagFilters() {
           tagFiltersContainer.innerHTML = '';
+
+          if (sortedTags.length <= 1) {
+            // Nothing to filter — hide the container and bail out
+            tagFiltersContainer.style.display = 'none';
+            return;
+          }
+          tagFiltersContainer.style.display = '';
 
           // "All" filter
           const allBadge = document.createElement('span');
@@ -1187,6 +1207,15 @@
           const data = event.data;
           if (data && data.type === 'set_map_view') {
             map.setView([data.lat, data.lng], data.zoom, { animate: true });
+          }
+          // Live-update the header title/description from the admin panel
+          if (data && data.type === 'set_header') {
+            const titleEl = document.getElementById('map-header-title');
+            const descEl = document.getElementById('map-header-description');
+            const headerEl = document.getElementById('map-header');
+            if (titleEl && data.title !== undefined) titleEl.textContent = data.title;
+            if (descEl && data.description !== undefined) descEl.textContent = data.description;
+            if (headerEl) headerEl.hidden = !data.title && !data.description;
           }
         });
 

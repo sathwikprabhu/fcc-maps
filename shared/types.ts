@@ -14,7 +14,7 @@ export interface Settings {
   authEnabled: boolean;
   username?: string;
   password?: string; // Application password
-  syncIntervalHours: number;
+  syncIntervalMinutes: number;
   defaultLat: number;
   defaultLng: number;
   defaultZoom: number;

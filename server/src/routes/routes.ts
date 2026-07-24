@@ -122,7 +122,9 @@ router.put(['/settings', '/maps/:mapId/settings'], standardLimiter, (req: Reques
       authEnabled: typeof body.authEnabled === 'boolean' ? body.authEnabled : false,
       username: typeof body.username === 'string' ? body.username : '',
       password: typeof body.password === 'string' ? body.password : '',
-      syncIntervalHours: typeof body.syncIntervalHours === 'number' ? body.syncIntervalHours : 12,
+      syncIntervalMinutes: typeof body.syncIntervalMinutes === 'number'
+        ? body.syncIntervalMinutes
+        : (typeof body.syncIntervalHours === 'number' ? body.syncIntervalHours * 60 : 60),
       defaultLat: typeof body.defaultLat === 'number' ? body.defaultLat : 45,
       defaultLng: typeof body.defaultLng === 'number' ? body.defaultLng : 6,
       defaultZoom: typeof body.defaultZoom === 'number' ? body.defaultZoom : 3,
@@ -152,11 +154,11 @@ router.put(['/settings', '/maps/:mapId/settings'], standardLimiter, (req: Reques
         }
       }
 
-      if (typeof newSettings.syncIntervalHours !== 'number' || newSettings.syncIntervalHours < 1) {
-        return res.status(400).json({ error: 'Sync interval must be at least 1 hour' });
+      if (typeof newSettings.syncIntervalMinutes !== 'number' || newSettings.syncIntervalMinutes < 1) {
+        return res.status(400).json({ error: 'Sync interval must be at least 1 minute' });
       }
-      if (newSettings.syncIntervalHours > 8760) {
-        return res.status(400).json({ error: 'Sync interval cannot exceed 8760 hours (1 year)' });
+      if (newSettings.syncIntervalMinutes > 525600) {
+        return res.status(400).json({ error: 'Sync interval cannot exceed 525600 minutes (1 year)' });
       }
     }
 

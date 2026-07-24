@@ -7,7 +7,7 @@ import fs from 'fs';
 import dotenv from 'dotenv';
 import apiRouter from './routes/routes';
 import authRouter from './routes/authRoutes';
-import { requireAuth } from './middleware/auth';
+import { requireAuth, validateSsoConfig } from './middleware/auth';
 import { scheduler } from './scheduler/scheduler';
 import { storage } from './services/storage';
 
@@ -17,6 +17,10 @@ dotenv.config();
 // Startup: validate critical environment variables and warn on misconfigurations
 // ---------------------------------------------------------------------------
 const isProduction = process.env.NODE_ENV === 'production';
+
+// Fix 4: Fail loudly at startup if SSO is enabled but misconfigured.
+// This prevents a server that silently skips authentication due to missing env vars.
+validateSsoConfig();
 
 if (isProduction) {
   if (!process.env.ALLOWED_ORIGINS) {
@@ -82,6 +86,7 @@ app.use(session({
 // Same-origin static files never need CORS headers.
 // ---------------------------------------------------------------------------
 const publicPath = path.join(__dirname, '../../public');
+app.use('/admin', requireAuth);
 app.use(express.static(publicPath));
 
 // ---------------------------------------------------------------------------

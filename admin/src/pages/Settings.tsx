@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useGlobal } from '../context/GlobalContext';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
@@ -30,6 +30,10 @@ export default function SettingsPage() {
   const [selectedPresetName, setSelectedPresetName] = useState<string>('CartoDB Voyager (Default)');
 
   const mapId = 'default';
+
+  useEffect(() => {
+    fetchData(mapId);
+  }, [mapId]);
 
   useEffect(() => {
     setFormSettings({ ...settings });
@@ -107,7 +111,6 @@ export default function SettingsPage() {
         <Card>
           <CardHeader>
             <CardTitle>WordPress REST API</CardTitle>
-            <CardDescription>Connect to your WordPress site to pull marker data.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-3">
@@ -115,12 +118,12 @@ export default function SettingsPage() {
               <Input
                 id="wpApiUrl"
                 type="url"
-                placeholder="https://example.com/wp-json/wp/v2"
+                placeholder="https://yourdomain/wp-json/wp/v2/posts"
                 value={formSettings.wpApiUrl}
                 onChange={(e) => setFormSettings(prev => ({ ...prev, wpApiUrl: e.target.value }))}
               />
               <p className="text-sm text-muted-foreground">
-                Usually ends with <code>/wp-json/wp/v2</code>
+                <code>https://yourdomain/wp-json/wp/v2/posts</code>
               </p>
             </div>
 
@@ -225,22 +228,21 @@ export default function SettingsPage() {
         <Card>
           <CardHeader>
             <CardTitle>Synchronization</CardTitle>
-            <CardDescription>Manage automated data syncing from WordPress.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-3">
-              <Label htmlFor="syncIntervalHours">Background Sync Interval (Hours)</Label>
+              <Label htmlFor="syncIntervalMinutes">Background Sync Interval (Minutes)</Label>
               <Input
-                id="syncIntervalHours"
+                id="syncIntervalMinutes"
                 type="number"
                 min="1"
-                max="168"
-                value={formSettings.syncIntervalHours}
-                onChange={(e) => setFormSettings(prev => ({ ...prev, syncIntervalHours: parseInt(e.target.value) || 12 }))}
+                max="525600"
+                value={formSettings.syncIntervalMinutes}
+                onChange={(e) => setFormSettings(prev => ({ ...prev, syncIntervalMinutes: parseInt(e.target.value) || 60 }))}
                 className="w-32"
               />
               <p className="text-sm text-muted-foreground">
-                How frequently the backend automatically syncs data (default: 12 hours).
+                How frequently the backend automatically syncs data (default: 60 minutes).
               </p>
             </div>
 
@@ -280,7 +282,6 @@ export default function SettingsPage() {
         <Card>
           <CardHeader>
             <CardTitle>Base Map Style</CardTitle>
-            <CardDescription>Configure the background map style and layer provider details.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-3">
@@ -333,9 +334,6 @@ export default function SettingsPage() {
                   value={formSettings.mapTilerApiKey || ''}
                   onChange={(e) => setFormSettings(prev => ({ ...prev, mapTilerApiKey: e.target.value }))}
                 />
-                <p className="text-xs text-muted-foreground">
-                  Key used to authenticate requests for base map providers.
-                </p>
               </div>
             )}
 

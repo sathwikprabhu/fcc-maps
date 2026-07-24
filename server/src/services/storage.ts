@@ -20,7 +20,7 @@ const DEFAULT_SETTINGS: Settings = {
   authEnabled: false,
   username: '',
   password: '',
-  syncIntervalHours: 12,
+  syncIntervalMinutes: 60,
   defaultLat: 45,
   defaultLng: 6,
   defaultZoom: 3,
@@ -234,7 +234,11 @@ export class StorageService {
     try {
       if (fs.existsSync(paths.settings)) {
         const data = fs.readFileSync(paths.settings, 'utf-8');
-        return { ...DEFAULT_SETTINGS, ...JSON.parse(data) };
+        const parsed = JSON.parse(data);
+        if (parsed.syncIntervalMinutes === undefined && parsed.syncIntervalHours !== undefined) {
+          parsed.syncIntervalMinutes = parsed.syncIntervalHours * 60;
+        }
+        return { ...DEFAULT_SETTINGS, ...parsed };
       }
     } catch (error) {
       this.addLog('error', 'Failed to read settings file', String(error), mapId);

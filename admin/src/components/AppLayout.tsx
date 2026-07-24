@@ -1,6 +1,7 @@
 import { Outlet, useLocation, Link } from 'react-router-dom';
 import { useEffect } from 'react';
 import { useGlobal } from '../context/GlobalContext';
+import { useAuth } from '../hooks/useAuth';
 import {
   Sidebar,
   SidebarContent,
@@ -30,6 +31,7 @@ function AppLayoutInner() {
   const location = useLocation();
   const { branding, fetchData } = useGlobal();
   const { state } = useSidebar();
+  const { user } = useAuth();
 
   useEffect(() => {
     fetchData('default');
@@ -140,17 +142,23 @@ function AppLayoutInner() {
           </SidebarGroup>
         </SidebarContent>
 
-        {/* Footer: non-interactive administrator identity */}
+        {/* Footer: authenticated user identity */}
         <SidebarFooter>
           <SidebarSeparator className="mb-1" />
           <div className="flex items-center gap-3 px-2 py-2">
             <div className="flex aspect-square size-8 shrink-0 items-center justify-center rounded-full bg-sidebar-primary text-sidebar-primary-foreground font-semibold text-xs select-none">
-              AD
+              {user
+                ? user.username.slice(0, 2).toUpperCase()
+                : 'AD'}
             </div>
             {!isCollapsed && (
               <div className="grid flex-1 text-left text-sm leading-tight overflow-hidden">
-                <span className="truncate font-medium">Administrator</span>
-                <span className="truncate text-xs text-sidebar-foreground/60">Admin Portal</span>
+                <span className="truncate font-medium">
+                  {user ? user.username : 'Administrator'}
+                </span>
+                <span className="truncate text-xs text-sidebar-foreground/60">
+                  {user ? 'Admin' : 'Admin Portal'}
+                </span>
               </div>
             )}
           </div>

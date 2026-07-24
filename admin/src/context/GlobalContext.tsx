@@ -32,7 +32,7 @@ export function GlobalProvider({ children }: { children: ReactNode }) {
     authEnabled: false,
     username: '',
     password: '',
-    syncIntervalHours: 12,
+    syncIntervalMinutes: 60,
     defaultLat: 45,
     defaultLng: 6,
     defaultZoom: 3,
@@ -211,6 +211,7 @@ export function GlobalProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     fetchMaps();
+    fetchData('default');
   }, []);
 
   return (

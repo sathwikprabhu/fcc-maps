@@ -43,6 +43,53 @@ export function isCernSsoEnabled(): boolean {
   return !['false', '0', 'no', 'off'].includes(value.trim().toLowerCase());
 }
 
+/**
+ * Fix 4: Fail loudly at startup if SSO is enabled but OIDC env vars are missing.
+ * Call this once during server startup to prevent a silently unauthenticated server.
+ */
+export function validateSsoConfig(): void {
+  if (!isCernSsoEnabled()) return;
+
+  const required: Record<string, string | undefined> = {
+    OIDC_ISSUER_URL: process.env.OIDC_ISSUER_URL,
+    OIDC_CLIENT_ID: process.env.OIDC_CLIENT_ID,
+    OIDC_CLIENT_SECRET: process.env.OIDC_CLIENT_SECRET,
+    OIDC_REDIRECT_URI: process.env.OIDC_REDIRECT_URI,
+  };
+
+  const missing = Object.entries(required)
+    .filter(([, v]) => !v)
+    .map(([k]) => k);
+
+  if (missing.length > 0) {
+    throw new Error(
+      `[AUTH] CERN SSO is enabled but the following required environment variables are not set: ${missing.join(', ')}. ` +
+      'Set CERN_SSO_ENABLED=false to run without authentication, or provide all required OIDC variables.',
+    );
+  }
+}
+
+/**
+ * Fix 1: Only allow relative redirect URLs to prevent open redirect attacks.
+ * Strips any protocol/host component and rejects absolute URLs to external sites.
+ */
+export function sanitizeRedirectUrl(url: string | undefined, fallback = '/admin/'): string {
+  if (!url) return fallback;
+  try {
+    // Reject absolute URLs (with protocol/host) — only allow path-only strings
+    const parsed = new URL(url, 'http://localhost');
+    // If the original string contained a host component, it is not a relative path
+    if (url.startsWith('//') || /^[a-zA-Z][a-zA-Z0-9+\-.]*:/.test(url)) {
+      console.warn('[AUTH] Blocked open-redirect attempt to:', url);
+      return fallback;
+    }
+    // Return just the path + search + hash (no host)
+    return parsed.pathname + parsed.search + parsed.hash || fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 function isApiRequest(req: Request) {
   return req.originalUrl === '/api' || req.originalUrl.startsWith('/api/');
 }
@@ -175,9 +222,19 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
   }
 
   const client = await getOidcConfig();
-  // If SSO is not configured in the environment, bypass auth (allow setup/dev mode)
+  // Fix 4: If SSO is enabled but OIDC discovery failed (e.g. network error),
+  // block all requests rather than silently granting access.
   if (!client) {
-    return next();
+    console.error('[AUTH] CERN SSO is enabled but OIDC client could not be initialized. Blocking request.');
+    if (isApiRequest(req)) {
+      return res.status(503).json({ error: 'Authentication service unavailable. Please contact an administrator.' });
+    }
+    return res.status(503).send(`
+      <html><body style="font-family:sans-serif;text-align:center;padding:3rem;">
+        <h2>Authentication Unavailable</h2>
+        <p>The authentication service could not be reached. Please try again later or contact an administrator.</p>
+      </body></html>
+    `);
   }
 
   // Check if session is already authenticated

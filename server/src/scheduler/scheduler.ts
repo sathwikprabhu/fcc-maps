@@ -50,16 +50,22 @@ export class SchedulerService {
     if (mapId !== 'default') {
       return; // Only default map runs a sync schedule
     }
-    storage.addLog('info', 'Rescheduling sync job due to settings change', undefined, mapId);
+    storage.addLog('info', 'Triggering sync and updating schedule due to settings change', undefined, mapId);
     this.lastHashes.delete(mapId); // Reset hash to force markers.json rebuild on settings change
     this.stopMapJob(mapId);
-    this.scheduleNext(mapId);
+    this.sync(mapId)
+      .catch(err => {
+        storage.addLog('error', 'Sync on settings change failed', String(err), mapId);
+      })
+      .finally(() => {
+        this.scheduleNext(mapId);
+      });
   }
 
   private scheduleNext(mapId: string): void {
     const settings = storage.getSettings(mapId);
-    const intervalHours = settings.syncIntervalHours || 12;
-    const intervalMs = intervalHours * 60 * 60 * 1000;
+    const intervalMinutes = settings.syncIntervalMinutes || 60;
+    const intervalMs = intervalMinutes * 60 * 1000;
 
     // Update status to show when next sync is
     const status = storage.getStatus(mapId);

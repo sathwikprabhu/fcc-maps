@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useGlobal } from '../context/GlobalContext';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
@@ -121,6 +121,16 @@ export default function MapEditor() {
       }, '*');
     }
   }, [formSettings.defaultLat, formSettings.defaultLng, formSettings.defaultZoom]);
+
+  // Live-update the preview iframe header when Display Name or Description changes
+  useEffect(() => {
+    if (!iframeRef.current?.contentWindow) return;
+    iframeRef.current.contentWindow.postMessage({
+      type: 'set_header',
+      title: mapName,
+      description: formSettings.description || '',
+    }, '*');
+  }, [mapName, formSettings.description]);
 
   // Reload/update the iframe preview ONLY when filters, clustering, or map view changes
   useEffect(() => {
@@ -396,20 +406,15 @@ export default function MapEditor() {
           </CardContent>
         </Card>
 
-        {/* Live Preview */}
-        <Card className="flex flex-col h-[600px] lg:h-auto overflow-hidden">
-          <CardHeader className="py-3">
-            <CardTitle className="text-sm">Live Preview</CardTitle>
-          </CardHeader>
-          <CardContent className="p-0 flex-1">
-            <iframe
-              ref={iframeRef}
-              src={iframeUrl}
-              className="w-full h-full border-0"
-              title="Map Preview"
-              key={`${id}-${selectedTags.join(',')}-${selectedCategories.join(',')}-${formSettings.enableClustering}`}
-            />
-          </CardContent>
+        {/* Preview iframe — no header label, self-explanatory */}
+        <Card className="flex flex-col h-[600px] lg:h-auto overflow-hidden p-0">
+          <iframe
+            ref={iframeRef}
+            src={iframeUrl}
+            className="w-full h-full border-0 rounded-xl"
+            title="Map Preview"
+            key={`${id}-${selectedTags.join(',')}-${selectedCategories.join(',')}-${formSettings.enableClustering}`}
+          />
         </Card>
       </div>
 

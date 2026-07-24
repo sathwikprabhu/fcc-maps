@@ -69,12 +69,19 @@ function MapTableRow({ map }: { map: { id: string; name: string; createdAt: stri
     <TableRow>
       {/* Name (Clickable link to edit page) */}
       <TableCell className="font-medium">
-        <Link
-          to={`/maps/${map.id}/edit`}
-          className="hover:underline hover:text-primary transition-colors font-semibold"
-        >
-          {map.name}
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            to={`/maps/${map.id}/edit`}
+            className="hover:underline hover:text-primary transition-colors font-semibold"
+          >
+            {map.name}
+          </Link>
+          {map.id === 'default' && (
+            <span className="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium bg-muted text-muted-foreground border border-border select-none">
+              Default
+            </span>
+          )}
+        </div>
       </TableCell>
 
       {/* Copy Embed Code */}

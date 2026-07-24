@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useGlobal } from '../context/GlobalContext';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
@@ -14,6 +14,10 @@ export default function Branding() {
   const [formSettings, setFormSettings] = useState<Settings>({ ...settings });
   const [isSaving, setIsSaving] = useState(false);
   const mapId = 'default';
+
+  useEffect(() => {
+    fetchData(mapId);
+  }, [mapId]);
 
   useEffect(() => {
     setFormSettings({ ...settings });
@@ -145,7 +149,6 @@ export default function Branding() {
       <Card>
         <CardHeader>
           <CardTitle>Appearance</CardTitle>
-          <CardDescription>Customize how the mapping application looks to your users.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-8">
 

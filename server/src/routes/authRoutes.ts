@@ -8,6 +8,7 @@ import {
   getRequiredGroups,
   hasRequiredGroup,
   isCernSsoEnabled,
+  sanitizeRedirectUrl,
 } from '../middleware/auth';
 
 const authRouter = Router();
@@ -53,6 +54,7 @@ authRouter.get('/callback', async (req: Request, res: Response) => {
 
   try {
     const { tokenSet, claims, userInfo } = await completeLogin(req);
+
     const subject = typeof claims?.sub === 'string'
       ? claims.sub
       : (userInfo as any).sub;
@@ -87,25 +89,30 @@ authRouter.get('/callback', async (req: Request, res: Response) => {
       `);
     }
 
-    // Store authenticated user in session
-    req.session.isAuthenticated = true;
-    req.session.user = {
+    // Fix 1: Sanitize the post-login redirect URL to prevent open redirects
+    const redirectTo = sanitizeRedirectUrl(req.session.authRedirectUrl);
+
+    // Fix 2: Regenerate session ID after successful login to prevent session fixation.
+    // We preserve the data we need to store in the new session.
+    const userData = {
       username: (userInfo as any).preferred_username as string || (userInfo as any).sub,
       email: (userInfo as any).email as string | undefined,
       roles,
     };
-    req.session.oidcIdToken = tokenSet.id_token;
+    const idToken = tokenSet.id_token;
+    const username = userData.username;
 
-    // Clean up OIDC state from session
-    delete req.session.oidcState;
-    delete req.session.oidcNonce;
-    delete req.session.oidcCodeVerifier;
+    await new Promise<void>((resolve, reject) => {
+      req.session.regenerate((err) => {
+        if (err) return reject(err);
+        req.session.isAuthenticated = true;
+        req.session.user = userData;
+        req.session.oidcIdToken = idToken;
+        resolve();
+      });
+    });
 
-    console.log(`[AUTH] Login successful: ${req.session.user.username}`);
-
-    // Redirect to original destination or admin panel
-    const redirectTo = req.session.authRedirectUrl || '/admin/';
-    delete req.session.authRedirectUrl;
+    console.log(`[AUTH] Login successful: ${username}`);
     res.redirect(redirectTo);
 
   } catch (error) {
