@@ -103,11 +103,13 @@ const PUBLIC_API_GET_PATTERNS: RegExp[] = [
   /^\/api\/maps\/[^/]+\/taxonomy-list(?:\?|$)/,   // GET /api/maps/:id/taxonomy-list
   /^\/api\/maps\/[^/]+\/status(?:\?|$)/,          // GET /api/maps/:id/status
   /^\/api\/maps\/[^/]+\/logs(?:\?|$)/,            // GET /api/maps/:id/logs
+  /^\/api\/maps\/[^/]+\/export-csv(?:\?|$)/,     // GET /api/maps/:id/export-csv
   /^\/api\/settings(?:\?|$)/,                      // GET /api/settings
   /^\/api\/colors(?:\?|$)/,                        // GET /api/colors
   /^\/api\/taxonomy-list(?:\?|$)/,                // GET /api/taxonomy-list
   /^\/api\/status(?:\?|$)/,                        // GET /api/status
   /^\/api\/logs(?:\?|$)/,                          // GET /api/logs
+  /^\/api\/export-csv(?:\?|$)/,                    // GET /api/export-csv
   /^\/markers\.json(?:\?|$)/,                     // GET /markers.json
   /^\/maps\/[^/]+\/markers\.json(?:\?|$)/,        // GET /maps/:id/markers.json
 ];
