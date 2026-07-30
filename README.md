@@ -9,10 +9,10 @@ Due to the security constraints and limitations of CERN's stripped-down version 
 ## Screenshots
 
 ### Admin Portal (Map Editor)
-![Admin Portal](public/assets/snapshot-admin.png)
+![Admin Portal](public/assets/snapshot_dashboard.png)
 
 ### Frontend (Map Widget Embed)
-![Frontend Map Widget](public/assets/snapshot-map.png)
+![Frontend Map Widget](public/assets/snapshot_embed.png)
 
 ---
 
