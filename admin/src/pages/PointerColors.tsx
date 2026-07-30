@@ -33,8 +33,7 @@ export default function PointerColors() {
     description: '',
   });
 
-  // Fetch taxonomies + colors locally for the default map so this page
-  // always has fresh data regardless of which map was visited last.
+  // Fetch taxonomies + colors locally for default map
   const [taxonomies, setTaxonomies] = useState<{ categories: string[]; tags: string[] }>({
     categories: [],
     tags: [],
@@ -132,10 +131,6 @@ export default function PointerColors() {
     setColors(prev => ({ ...prev, tags: nextTags }));
   };
 
-  const hasCustomCategoryColors = Object.keys(colors.categories || {}).length > 0;
-  const hasCustomTagColors = Object.keys(colors.tags || {}).length > 0;
-  const hasAnyCustomColors = hasCustomCategoryColors || hasCustomTagColors;
-
   const noCategories = !loading && taxonomies.categories.length === 0;
   const noTags = !loading && taxonomies.tags.length === 0;
 
@@ -161,10 +156,10 @@ export default function PointerColors() {
                   'Are you sure you want to reset all pointer pin colors and popup badge colors? Markers will revert to the default blue map pointer.',
               })
             }
-            disabled={!hasAnyCustomColors || loading || isSaving}
+            disabled={loading || isSaving || isResetting}
           >
             <RotateCcw data-icon="inline-start" className="size-4" />
-            Reset Colors
+            Reset All Colors
           </Button>
 
           <Button onClick={() => handleSaveColors()} disabled={isSaving || loading}>
@@ -182,25 +177,23 @@ export default function PointerColors() {
               <h3 className="text-sm font-semibold flex items-center gap-2">
                 <span className="h-2 w-2 rounded-full bg-primary" /> Pointer Pin Colors (by Category)
               </h3>
-              {hasCustomCategoryColors && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() =>
-                    setConfirmDialog({
-                      open: true,
-                      type: 'categories',
-                      title: 'Reset Category Pin Colors?',
-                      description:
-                        'Are you sure you want to reset all category colors? Pins will show the default map pointer.',
-                    })
-                  }
-                  disabled={loading || isSaving}
-                >
-                  <RotateCcw data-icon="inline-start" className="size-3.5" />
-                  Reset Category Colors
-                </Button>
-              )}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  setConfirmDialog({
+                    open: true,
+                    type: 'categories',
+                    title: 'Reset Category Pin Colors?',
+                    description:
+                      'Are you sure you want to reset all category colors? Pins will show the default map pointer.',
+                  })
+                }
+                disabled={loading || isSaving || isResetting}
+              >
+                <RotateCcw data-icon="inline-start" className="size-3.5" />
+                Reset Category Colors
+              </Button>
             </div>
 
             <div className="border rounded-md overflow-hidden">
@@ -226,7 +219,7 @@ export default function PointerColors() {
                     </TableRow>
                   ) : (
                     taxonomies.categories.map((category) => {
-                      const customColor = colors.categories[category];
+                      const customColor = colors.categories?.[category];
                       return (
                         <TableRow key={category}>
                           <TableCell className="font-medium">
@@ -280,25 +273,23 @@ export default function PointerColors() {
               <h3 className="text-sm font-semibold flex items-center gap-2">
                 <span className="h-2 w-2 rounded-full bg-muted-foreground" /> Popup Badge Colors (by Tag)
               </h3>
-              {hasCustomTagColors && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() =>
-                    setConfirmDialog({
-                      open: true,
-                      type: 'tags',
-                      title: 'Reset Tag Badge Colors?',
-                      description:
-                        'Are you sure you want to reset all tag badge colors? Badges will show the default badge styling.',
-                    })
-                  }
-                  disabled={loading || isSaving}
-                >
-                  <RotateCcw data-icon="inline-start" className="size-3.5" />
-                  Reset Tag Colors
-                </Button>
-              )}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  setConfirmDialog({
+                    open: true,
+                    type: 'tags',
+                    title: 'Reset Tag Badge Colors?',
+                    description:
+                      'Are you sure you want to reset all tag badge colors? Badges will show the default badge styling.',
+                  })
+                }
+                disabled={loading || isSaving || isResetting}
+              >
+                <RotateCcw data-icon="inline-start" className="size-3.5" />
+                Reset Tag Colors
+              </Button>
             </div>
 
             <div className="border rounded-md overflow-hidden">
@@ -324,7 +315,7 @@ export default function PointerColors() {
                     </TableRow>
                   ) : (
                     taxonomies.tags.map((tag) => {
-                      const customColor = colors.tags[tag];
+                      const customColor = colors.tags?.[tag];
                       return (
                         <TableRow key={tag}>
                           <TableCell className="font-medium">
