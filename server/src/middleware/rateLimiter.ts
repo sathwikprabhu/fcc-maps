@@ -6,11 +6,11 @@ const bypass = (req: Request, res: Response, next: NextFunction) => next();
 
 /**
  * Strict limiter for high-risk write operations (sync trigger, file upload).
- * 10 requests per 15 minutes per IP.
+ * 60 requests per 15 minutes per IP.
  */
 export const strictLimiter = isDev ? bypass : rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 10,
+  max: 60,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Too many requests. Please try again later.' },
@@ -18,11 +18,11 @@ export const strictLimiter = isDev ? bypass : rateLimit({
 
 /**
  * Standard limiter for settings/colors writes.
- * 30 requests per 15 minutes per IP.
+ * 300 requests per 15 minutes per IP.
  */
 export const standardLimiter = isDev ? bypass : rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 30,
+  max: 300,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Too many requests. Please try again later.' },
@@ -30,11 +30,11 @@ export const standardLimiter = isDev ? bypass : rateLimit({
 
 /**
  * Loose limiter for read endpoints (logs, status, export).
- * 120 requests per 15 minutes per IP.
+ * 1000 requests per 15 minutes per IP.
  */
 export const looseLimiter = isDev ? bypass : rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 120,
+  max: 1000,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Too many requests. Please try again later.' },

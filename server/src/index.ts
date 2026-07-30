@@ -152,6 +152,10 @@ app.use('/api', requireAuth, apiRouter);
 app.get('/admin', requireAuth, (_req: Request, res: Response) => {
   res.redirect('/admin/');
 });
+// /admin/login is the unauthenticated login page — serve without auth guard
+app.get('/admin/login', (_req: Request, res: Response) => {
+  res.sendFile(path.join(publicPath, 'admin/index.html'));
+});
 app.get('/admin/*', requireAuth, (req: Request, res: Response) => {
   const ext = path.extname(req.path);
   if (ext && ext !== '.html') {

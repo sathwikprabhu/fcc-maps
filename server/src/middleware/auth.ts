@@ -94,6 +94,20 @@ function isApiRequest(req: Request) {
   return req.originalUrl === '/api' || req.originalUrl.startsWith('/api/');
 }
 
+// Public API GET routes — accessible without authentication so the map embed
+// and public-facing map pages work for unauthenticated visitors.
+const PUBLIC_API_GET_PATTERNS: RegExp[] = [
+  /^\/api\/maps(?:\?|$)/,                          // GET /api/maps
+  /^\/api\/maps\/[^/]+\/settings(?:\?|$)/,        // GET /api/maps/:id/settings
+  /^\/api\/maps\/[^/]+\/colors(?:\?|$)/,          // GET /api/maps/:id/colors
+  /^\/api\/maps\/[^/]+\/taxonomy-list(?:\?|$)/,   // GET /api/maps/:id/taxonomy-list
+  /^\/api\/settings(?:\?|$)/,                      // GET /api/settings
+  /^\/api\/colors(?:\?|$)/,                        // GET /api/colors
+  /^\/api\/taxonomy-list(?:\?|$)/,                // GET /api/taxonomy-list
+  /^\/markers\.json(?:\?|$)/,                     // GET /markers.json
+  /^\/maps\/[^/]+\/markers\.json(?:\?|$)/,        // GET /maps/:id/markers.json
+];
+
 function isPublicRoute(req: Request) {
   const publicPaths = [
     '/embed',
@@ -103,9 +117,15 @@ function isPublicRoute(req: Request) {
     '/auth/login',
     '/auth/callback',
     '/auth/logout',
+    '/admin/login',
   ];
 
   if (publicPaths.some((path) => req.originalUrl === path || req.originalUrl.startsWith(`${path}/`))) {
+    return true;
+  }
+
+  // Allow public read-only API access for map data (GET only)
+  if (req.method === 'GET' && PUBLIC_API_GET_PATTERNS.some((re) => re.test(req.originalUrl))) {
     return true;
   }
 
@@ -283,11 +303,11 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
     return res.status(401).json({ error: 'Unauthorized. Please log in.' });
   }
 
-  // Initiate redirect to CERN SSO Login
+  // Redirect to the login page (which has a "Login with CERN SSO" button)
   try {
-    res.redirect('/auth/login');
+    res.redirect('/admin/login');
   } catch (error) {
-    console.error('[AUTH] Failed to generate authorization URL:', error);
+    console.error('[AUTH] Failed to redirect to login page:', error);
     res.status(500).send('Internal server error initializing authentication.');
   }
 }

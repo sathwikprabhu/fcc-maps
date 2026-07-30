@@ -1,5 +1,5 @@
 import { Outlet, useLocation, Link } from 'react-router-dom';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useGlobal } from '../context/GlobalContext';
 import { useAuth } from '../hooks/useAuth';
 import {
@@ -25,13 +25,24 @@ import {
   ImageIcon,
   Activity,
   Settings,
+  LogOut,
 } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 
 function AppLayoutInner() {
   const location = useLocation();
   const { branding, fetchData } = useGlobal();
   const { state } = useSidebar();
   const { user } = useAuth();
+  const [showLogoutDialog, setShowLogoutDialog] = useState(false);
 
   useEffect(() => {
     fetchData('default');
@@ -142,7 +153,7 @@ function AppLayoutInner() {
           </SidebarGroup>
         </SidebarContent>
 
-        {/* Footer: authenticated user identity */}
+        {/* Footer: authenticated user identity + logout */}
         <SidebarFooter>
           <SidebarSeparator className="mb-1" />
           <div className="flex items-center gap-3 px-2 py-2">
@@ -161,8 +172,41 @@ function AppLayoutInner() {
                 </span>
               </div>
             )}
+            <button
+              id="sidebar-logout-btn"
+              aria-label="Log out"
+              title="Log out"
+              onClick={() => setShowLogoutDialog(true)}
+              className="ml-auto flex items-center justify-center size-7 rounded-md text-sidebar-foreground/50 hover:text-sidebar-foreground hover:bg-sidebar-accent transition-colors shrink-0"
+            >
+              <LogOut className="size-4" />
+            </button>
           </div>
         </SidebarFooter>
+
+        {/* Logout confirmation dialog */}
+        <Dialog open={showLogoutDialog} onOpenChange={setShowLogoutDialog}>
+          <DialogContent className="sm:max-w-sm">
+            <DialogHeader>
+              <DialogTitle>Log out</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to log out? You will be redirected to the CERN SSO logout page.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter className="gap-2 sm:gap-0">
+              <Button variant="outline" onClick={() => setShowLogoutDialog(false)}>
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() => { window.location.href = '/auth/logout'; }}
+              >
+                <LogOut className="size-4 mr-1.5" />
+                Log Out
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </Sidebar>
 
       {/* Main content area */}

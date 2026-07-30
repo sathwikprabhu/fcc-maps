@@ -138,21 +138,29 @@ authRouter.get('/logout', async (req: Request, res: Response) => {
   const username = req.session?.user?.username;
   const endSessionUrl = await buildLogoutUrl(req);
 
-  req.session.destroy((err) => {
-    if (err) {
-      console.error('[AUTH] Session destroy error:', err);
-    }
-    if (username) {
-      console.log(`[AUTH] Logout: ${username}`);
-    }
+  // Destroy session fully before redirecting, to prevent the app staying
+  // authenticated if CERN SSO redirects back quickly.
+  await new Promise<void>((resolve) => {
+    req.session.destroy((err) => {
+      if (err) {
+        console.error('[AUTH] Session destroy error:', err);
+      }
+      if (username) {
+        console.log(`[AUTH] Logout: ${username}`);
+      }
+      resolve();
+    });
   });
+
+  // Clear the session cookie explicitly so the browser drops it immediately
+  res.clearCookie('connect.sid', { path: '/' });
 
   // Redirect to CERN SSO end_session endpoint if available
   if (endSessionUrl) {
     return res.redirect(endSessionUrl.href);
   }
 
-  res.redirect('/admin/');
+  res.redirect('/admin/login');
 });
 
 // ---------------------------------------------------------------------------
