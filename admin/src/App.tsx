@@ -139,30 +139,19 @@ function AuthGate({ children }: { children: React.ReactNode }) {
 // ---------------------------------------------------------------------------
 export default function App() {
   return (
-    <Routes>
-      {/* Public login route — no auth required, no sidebar */}
-      <Route path="/login" element={<LoginPage />} />
-
-      {/* All other routes protected by the auth gate */}
-      <Route
-        path="/*"
-        element={
-          <AuthGate>
-            <GlobalProvider>
-              <Routes>
-                <Route element={<AppLayout />}>
-                  <Route path="/" element={<MapsList />} />
-                  <Route path="/maps/:id/edit" element={<MapEditor />} />
-                  <Route path="/colors" element={<PointerColors />} />
-                  <Route path="/branding" element={<Branding />} />
-                  <Route path="/metrics" element={<Metrics />} />
-                  <Route path="/settings" element={<SettingsPage />} />
-                </Route>
-              </Routes>
-            </GlobalProvider>
-          </AuthGate>
-        }
-      />
-    </Routes>
+    <AuthGate>
+      <GlobalProvider>
+        <Routes>
+          <Route element={<AppLayout />}>
+            <Route path="/" element={<MapsList />} />
+            <Route path="/maps/:id/edit" element={<MapEditor />} />
+            <Route path="/colors" element={<PointerColors />} />
+            <Route path="/branding" element={<Branding />} />
+            <Route path="/metrics" element={<Metrics />} />
+            <Route path="/settings" element={<SettingsPage />} />
+          </Route>
+        </Routes>
+      </GlobalProvider>
+    </AuthGate>
   );
 }

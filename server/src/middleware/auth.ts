@@ -117,7 +117,6 @@ function isPublicRoute(req: Request) {
     '/auth/login',
     '/auth/callback',
     '/auth/logout',
-    '/admin/login',
   ];
 
   if (publicPaths.some((path) => req.originalUrl === path || req.originalUrl.startsWith(`${path}/`))) {
@@ -303,11 +302,11 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
     return res.status(401).json({ error: 'Unauthorized. Please log in.' });
   }
 
-  // Redirect to the login page (which has a "Login with CERN SSO" button)
+  // Redirect to the admin SPA — the client-side AuthGate will show the login page
   try {
-    res.redirect('/admin/login');
+    res.redirect('/admin/');
   } catch (error) {
-    console.error('[AUTH] Failed to redirect to login page:', error);
+    console.error('[AUTH] Failed to redirect to admin:', error);
     res.status(500).send('Internal server error initializing authentication.');
   }
 }
