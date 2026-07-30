@@ -1,7 +1,7 @@
 import { Routes, Route } from 'react-router-dom';
 import { GlobalProvider } from './context/GlobalContext';
+import { AuthProvider, useAuthContext } from './context/AuthContext';
 import AppLayout from './components/AppLayout';
-import { useAuth } from './hooks/useAuth';
 
 import MapsList from './pages/MapsList';
 import MapEditor from './pages/MapEditor';
@@ -110,15 +110,13 @@ function LoadingScreen() {
 }
 
 // ---------------------------------------------------------------------------
-// AuthGate — resolves auth state before rendering the main app
+// AuthGate — reads from shared AuthContext (single /auth/me fetch for whole app)
 // ---------------------------------------------------------------------------
 function AuthGate({ children }: { children: React.ReactNode }) {
-  const { loading, authenticated, status, error } = useAuth();
+  const { loading, authenticated, status, error } = useAuthContext();
 
-  // Still fetching /auth/me — show loading spinner to prevent blank screen
   if (loading) return <LoadingScreen />;
 
-  // Server returned 403 — show access denied screen (not blank app)
   if (status === 403) {
     return (
       <AccessDeniedScreen
@@ -127,10 +125,8 @@ function AuthGate({ children }: { children: React.ReactNode }) {
     );
   }
 
-  // Not authenticated — show login page
   if (!authenticated) return <LoginPage />;
 
-  // Authenticated — render the app
   return <>{children}</>;
 }
 
@@ -139,19 +135,22 @@ function AuthGate({ children }: { children: React.ReactNode }) {
 // ---------------------------------------------------------------------------
 export default function App() {
   return (
-    <AuthGate>
-      <GlobalProvider>
-        <Routes>
-          <Route element={<AppLayout />}>
-            <Route path="/" element={<MapsList />} />
-            <Route path="/maps/:id/edit" element={<MapEditor />} />
-            <Route path="/colors" element={<PointerColors />} />
-            <Route path="/branding" element={<Branding />} />
-            <Route path="/metrics" element={<Metrics />} />
-            <Route path="/settings" element={<SettingsPage />} />
-          </Route>
-        </Routes>
-      </GlobalProvider>
-    </AuthGate>
+    // AuthProvider fetches /auth/me once and shares result with all consumers
+    <AuthProvider>
+      <AuthGate>
+        <GlobalProvider>
+          <Routes>
+            <Route element={<AppLayout />}>
+              <Route path="/" element={<MapsList />} />
+              <Route path="/maps/:id/edit" element={<MapEditor />} />
+              <Route path="/colors" element={<PointerColors />} />
+              <Route path="/branding" element={<Branding />} />
+              <Route path="/metrics" element={<Metrics />} />
+              <Route path="/settings" element={<SettingsPage />} />
+            </Route>
+          </Routes>
+        </GlobalProvider>
+      </AuthGate>
+    </AuthProvider>
   );
 }

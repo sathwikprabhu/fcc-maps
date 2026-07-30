@@ -1,7 +1,7 @@
 import { Outlet, useLocation, Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { useGlobal } from '../context/GlobalContext';
-import { useAuth } from '../hooks/useAuth';
+import { useAuthContext } from '../context/AuthContext';
 import {
   Sidebar,
   SidebarContent,
@@ -41,7 +41,7 @@ function AppLayoutInner() {
   const location = useLocation();
   const { branding, fetchData } = useGlobal();
   const { state } = useSidebar();
-  const { user } = useAuth();
+  const { user } = useAuthContext();
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
 
   useEffect(() => {
