@@ -13,7 +13,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { RotateCcw, Save, Trash2, X } from 'lucide-react';
+import { RotateCcw, Save, Trash2 } from 'lucide-react';
 
 const MAP_ID = 'default';
 
@@ -202,18 +202,19 @@ export default function PointerColors() {
                   <TableRow>
                     <TableHead>Category</TableHead>
                     <TableHead className="w-64">Color</TableHead>
+                    <TableHead className="w-24 text-right">Reset</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {loading ? (
                     <TableRow>
-                      <TableCell colSpan={2} className="text-center text-muted-foreground py-8">
+                      <TableCell colSpan={3} className="text-center text-muted-foreground py-8">
                         Loading…
                       </TableCell>
                     </TableRow>
                   ) : noCategories ? (
                     <TableRow>
-                      <TableCell colSpan={2} className="text-center text-muted-foreground py-8">
+                      <TableCell colSpan={3} className="text-center text-muted-foreground py-8">
                         No categories found. Sync the Default Map first.
                       </TableCell>
                     </TableRow>
@@ -233,30 +234,29 @@ export default function PointerColors() {
                             </div>
                           </TableCell>
                           <TableCell>
-                            <div className="flex items-center gap-2">
-                              <div className="flex-1">
-                                <ColorPicker
-                                  value={customColor || '#2563eb'}
-                                  onChange={(color) =>
-                                    setColors((prev) => ({
-                                      ...prev,
-                                      categories: { ...prev.categories, [category]: color },
-                                    }))
-                                  }
-                                />
-                              </div>
-                              {customColor && (
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="size-8 text-muted-foreground hover:text-foreground"
-                                  onClick={() => handleClearSingleCategory(category)}
-                                  title="Reset to default map pointer"
-                                >
-                                  <X className="size-4" />
-                                </Button>
-                              )}
-                            </div>
+                            <ColorPicker
+                              value={customColor || '#2563eb'}
+                              onChange={(color) =>
+                                setColors((prev) => ({
+                                  ...prev,
+                                  categories: { ...prev.categories, [category]: color },
+                                }))
+                              }
+                            />
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {customColor ? (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleClearSingleCategory(category)}
+                                title="Reset to default blue pointer"
+                              >
+                                Reset
+                              </Button>
+                            ) : (
+                              <span className="text-xs text-muted-foreground select-none">—</span>
+                            )}
                           </TableCell>
                         </TableRow>
                       );
@@ -298,18 +298,19 @@ export default function PointerColors() {
                   <TableRow>
                     <TableHead>Tag</TableHead>
                     <TableHead className="w-64">Color</TableHead>
+                    <TableHead className="w-24 text-right">Reset</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {loading ? (
                     <TableRow>
-                      <TableCell colSpan={2} className="text-center text-muted-foreground py-8">
+                      <TableCell colSpan={3} className="text-center text-muted-foreground py-8">
                         Loading…
                       </TableCell>
                     </TableRow>
                   ) : noTags ? (
                     <TableRow>
-                      <TableCell colSpan={2} className="text-center text-muted-foreground py-8">
+                      <TableCell colSpan={3} className="text-center text-muted-foreground py-8">
                         No tags found. Sync the Default Map first.
                       </TableCell>
                     </TableRow>
@@ -329,30 +330,29 @@ export default function PointerColors() {
                             </div>
                           </TableCell>
                           <TableCell>
-                            <div className="flex items-center gap-2">
-                              <div className="flex-1">
-                                <ColorPicker
-                                  value={customColor || '#71717a'}
-                                  onChange={(color) =>
-                                    setColors((prev) => ({
-                                      ...prev,
-                                      tags: { ...prev.tags, [tag]: color },
-                                    }))
-                                  }
-                                />
-                              </div>
-                              {customColor && (
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="size-8 text-muted-foreground hover:text-foreground"
-                                  onClick={() => handleClearSingleTag(tag)}
-                                  title="Reset to default badge"
-                                >
-                                  <X className="size-4" />
-                                </Button>
-                              )}
-                            </div>
+                            <ColorPicker
+                              value={customColor || '#71717a'}
+                              onChange={(color) =>
+                                setColors((prev) => ({
+                                  ...prev,
+                                  tags: { ...prev.tags, [tag]: color },
+                                }))
+                              }
+                            />
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {customColor ? (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleClearSingleTag(tag)}
+                                title="Reset to default badge style"
+                              >
+                                Reset
+                              </Button>
+                            ) : (
+                              <span className="text-xs text-muted-foreground select-none">—</span>
+                            )}
                           </TableCell>
                         </TableRow>
                       );
