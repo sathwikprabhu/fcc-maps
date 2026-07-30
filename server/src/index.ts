@@ -86,7 +86,6 @@ app.use(session({
 // Same-origin static files never need CORS headers.
 // ---------------------------------------------------------------------------
 const publicPath = path.join(__dirname, '../../public');
-app.use('/admin', requireAuth);
 app.use(express.static(publicPath));
 
 // ---------------------------------------------------------------------------
