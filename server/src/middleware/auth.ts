@@ -101,9 +101,13 @@ const PUBLIC_API_GET_PATTERNS: RegExp[] = [
   /^\/api\/maps\/[^/]+\/settings(?:\?|$)/,        // GET /api/maps/:id/settings
   /^\/api\/maps\/[^/]+\/colors(?:\?|$)/,          // GET /api/maps/:id/colors
   /^\/api\/maps\/[^/]+\/taxonomy-list(?:\?|$)/,   // GET /api/maps/:id/taxonomy-list
+  /^\/api\/maps\/[^/]+\/status(?:\?|$)/,          // GET /api/maps/:id/status
+  /^\/api\/maps\/[^/]+\/logs(?:\?|$)/,            // GET /api/maps/:id/logs
   /^\/api\/settings(?:\?|$)/,                      // GET /api/settings
   /^\/api\/colors(?:\?|$)/,                        // GET /api/colors
   /^\/api\/taxonomy-list(?:\?|$)/,                // GET /api/taxonomy-list
+  /^\/api\/status(?:\?|$)/,                        // GET /api/status
+  /^\/api\/logs(?:\?|$)/,                          // GET /api/logs
   /^\/markers\.json(?:\?|$)/,                     // GET /markers.json
   /^\/maps\/[^/]+\/markers\.json(?:\?|$)/,        // GET /maps/:id/markers.json
 ];
