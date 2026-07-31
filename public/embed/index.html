@@ -1113,45 +1113,38 @@
               itemDiv.title = hasCoords ? item.title : `${item.title} (no coordinates)`;
               itemDiv.onclick = () => {
                 const ref = markerRefs[item.id || item.title];
-                if (ref) {
-                  const currentZoom = map.getZoom();
-                  const targetZoom = currentZoom < 7 ? 7 : currentZoom;
-                  const currentCenter = map.getCenter();
-                  const needsMove = currentZoom !== targetZoom || currentCenter.distanceTo(ref.latLng) >= 1;
+                if (!ref) return;
 
-                  /**
-                   * Final step: marker is now visible. Check if it is clustered and
-                   * needs spiderfying, or if it is standalone and can be opened directly.
-                   */
-                  const openWhenReady = () => {
-                    if (!enableClustering || typeof markerGroup.getVisibleParent !== 'function') {
-                      ref.marker.openPopup();
-                      return;
-                    }
-                    const parent = markerGroup.getVisibleParent(ref.marker);
-                    if (parent && typeof parent.spiderfy === 'function') {
-                      // Still in a cluster — spiderfy it, then open popup after animation
-                      markerGroup.once('animationend', () => ref.marker.openPopup());
-                      parent.spiderfy();
-                    } else {
-                      // Standalone marker — open popup immediately
-                      ref.marker.openPopup();
-                    }
-                  };
+                const targetZoom = Math.max(map.getZoom(), 7);
+                const zoomChanges = map.getZoom() < 7;
+                const needsMove = zoomChanges || map.getCenter().distanceTo(ref.latLng) >= 1;
 
-                  if (needsMove) {
-                    // Pan/zoom first, then resolve
-                    map.once('moveend', openWhenReady);
-                    map.setView(ref.latLng, targetZoom, { animate: true });
+                // Spiderfy the parent cluster if the marker is clustered, then open popup
+                const spiderfyAndOpen = () => {
+                  const parent = enableClustering && markerGroup.getVisibleParent?.(ref.marker);
+                  if (parent?.spiderfy) {
+                    markerGroup.once('animationend', () => ref.marker.openPopup());
+                    parent.spiderfy();
                   } else {
-                    // Already in position — resolve immediately
-                    openWhenReady();
+                    ref.marker.openPopup();
                   }
+                };
 
-                  if (window.innerWidth <= 768) {
-                    sidebar.classList.add('collapsed');
-                  }
+                if (!needsMove) {
+                  spiderfyAndOpen();
+                } else {
+                  map.once('moveend', () => {
+                    // After a zoom change, MarkerCluster re-animates clusters — wait for that first
+                    if (zoomChanges && enableClustering) {
+                      markerGroup.once('animationend', spiderfyAndOpen);
+                    } else {
+                      spiderfyAndOpen();
+                    }
+                  });
+                  map.setView(ref.latLng, targetZoom, { animate: true });
                 }
+
+                if (window.innerWidth <= 768) sidebar.classList.add('collapsed');
               };
               itemsDiv.appendChild(itemDiv);
             });
