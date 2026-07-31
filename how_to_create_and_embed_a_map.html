@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Guide: How to Create and Embed a Map</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.6;
+      color: #1f2937;
+      max-width: 800px;
+      margin: 40px auto;
+      padding: 0 20px;
+      background-color: #f9fafb;
+    }
+    h1 {
+      font-size: 2.25rem;
+      font-weight: 800;
+      color: #111827;
+      border-bottom: 1px solid #e5e7eb;
+      padding-bottom: 12px;
+      margin-top: 0;
+    }
+    h2 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #111827;
+      margin-top: 40px;
+    }
+    h3 {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: #374151;
+      margin-top: 24px;
+    }
+    hr {
+      border: 0;
+      border-top: 1px solid #e5e7eb;
+      margin: 32px 0;
+    }
+    ol, ul {
+      padding-left: 20px;
+    }
+    li {
+      margin-bottom: 8px;
+    }
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.875em;
+      background-color: #f3f4f6;
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: #d97706;
+    }
+    pre {
+      background-color: #1f2937;
+      color: #f9fafb;
+      padding: 16px;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin: 16px 0;
+    }
+    pre code {
+      background-color: transparent;
+      padding: 0;
+      color: inherit;
+      font-size: 0.9em;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+    }
+    th, td {
+      border: 1px solid #e5e7eb;
+      padding: 10px 14px;
+      text-align: left;
+    }
+    th {
+      background-color: #f3f4f6;
+      font-weight: 600;
+    }
+    .note {
+      background-color: #eff6ff;
+      border-left: 4px solid #3b82f6;
+      padding: 12px 16px;
+      border-radius: 0 4px 4px 0;
+      margin: 20px 0;
+      font-size: 0.95em;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Guide: How to Create and Embed a Map</h1>
+  <p>This guide shows you how to create a map, configure settings, format WordPress posts, and embed it into your website.</p>
+
+  <hr>
+
+  <h2>Step 1: Log in to the Admin Dashboard</h2>
+  <ol>
+    <li>Open your browser. Go to your Admin Portal URL (example: <code>http://localhost:5050/admin/</code>).</li>
+    <li>Click the <strong>Login with CERN SSO</strong> button.</li>
+    <li>Log in using your CERN account.</li>
+  </ol>
+
+  <hr>
+
+  <h2>Step 2: Create a New Map</h2>
+  <ol>
+    <li>In the sidebar menu, click <strong>Maps</strong>.</li>
+    <li>Click the <strong>Add New Map</strong> button in the top right.</li>
+    <li>Enter a <strong>Display Name</strong> (example: <code>Europe Collaboration</code>).</li>
+    <li>The system automatically creates a <strong>Map ID</strong> (example: <code>europe-collaboration</code>). You can edit this ID.</li>
+    <li>Click <strong>Save</strong>. The dashboard will redirect you to the map editor page.</li>
+  </ol>
+
+  <hr>
+
+  <h2>Step 3: Configure Map Settings</h2>
+  <p>In the map editor page, configure these settings:</p>
+  <ol>
+    <li><strong>Latitude, Longitude &amp; Zoom</strong>: Use the sliders to set the initial starting position and zoom level of the map.</li>
+    <li><strong>Enable Clustering</strong>: Toggle this switch to group close markers into single circles when zoomed out.</li>
+    <li><strong>Filtering Rules (Optional)</strong>:
+      <ul>
+        <li><strong>Limit by Categories</strong>: Enter WordPress category names to show only posts from those categories.</li>
+        <li><strong>Limit by Tags</strong>: Enter WordPress tag names to show only posts with those tags.</li>
+      </ul>
+    </li>
+    <li>Click <strong>Save Settings</strong> in the top right.</li>
+  </ol>
+
+  <hr>
+
+  <h2>Step 4: Configure WordPress Posts</h2>
+  <p>To show locations on your map, publish posts in WordPress containing coordinate data:</p>
+  <ol>
+    <li><strong>Add Coordinates</strong>: Write the latitude and longitude in the WordPress post <strong>Excerpt</strong> box.
+      <ul>
+        <li><strong>Format</strong>: <code>latitude, longitude</code></li>
+        <li><strong>Example</strong>: <code>46.2330, 6.0555</code></li>
+      </ul>
+      <div class="note">
+        <strong>Note:</strong> The tool parses and reads the first two decimal numbers it finds in the excerpt text.
+      </div>
+    </li>
+    <li><strong>Featured Image</strong>: Assign a featured image to the post. This image displays as a thumbnail inside the marker popup.</li>
+    <li><strong>Categories &amp; Tags</strong>: Set categories and tags on the post. These form the badge tags and categories inside the map popups and sidebar filters.</li>
+    <li><strong>Custom Website Link (Optional)</strong>: By default, map popups link back to the WordPress post. To link to a custom URL instead:
+      <ul>
+        <li>Switch the WordPress editor to <strong>HTML view</strong>.</li>
+        <li>Add an element with <code>id="website-url"</code> containing the URL.</li>
+        <li><strong>Example</strong>: <code>&lt;a id="website-url" href="https://cern.ch"&gt;Visit Website&lt;/a&gt;</code></li>
+      </ul>
+    </li>
+  </ol>
+
+  <hr>
+
+  <h2>Step 5: Sync the Map</h2>
+  <p>Your map automatically pulls new WordPress posts on a schedule. To sync immediately:</p>
+  <ol>
+    <li>In the sidebar, click <strong>Metrics</strong>.</li>
+    <li>Click the <strong>Force Sync</strong> button.</li>
+  </ol>
+
+  <hr>
+
+  <h2>Step 6: Embed the Map on Your Website</h2>
+  <ol>
+    <li>In the sidebar, click <strong>Maps</strong>.</li>
+    <li>Click <strong>Copy Embed Code</strong> next to your map.</li>
+    <li>Paste the copied iframe code into your website's HTML source.</li>
+  </ol>
+
+  <h3>Iframe Code Example:</h3>
+  <pre><code>&lt;iframe
+  src="https://your-server.com/embed/?map=europe-collaboration"
+  width="100%"
+  height="500"
+  frameborder="0"
+  allowfullscreen&gt;
+&lt;/iframe&gt;</code></pre>
+
+  <hr>
+
+  <h2>Customizing the Map View (URL Parameters)</h2>
+  <p>You can add parameters directly to the <code>src</code> URL of your iframe to change the map configuration on the fly:</p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Parameter</th>
+        <th>Description</th>
+        <th>Example</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>map</code></td>
+        <td>The ID of the map to display</td>
+        <td><code>map=europe-map</code></td>
+      </tr>
+      <tr>
+        <td><code>lat</code> &amp; <code>lng</code></td>
+        <td>Overrides the default map center coordinates</td>
+        <td><code>lat=46.2&amp;lng=6.0</code></td>
+      </tr>
+      <tr>
+        <td><code>zoom</code></td>
+        <td>Overrides the initial zoom level (1 to 20)</td>
+        <td><code>zoom=12</code></td>
+      </tr>
+      <tr>
+        <td><code>categories</code></td>
+        <td>Filter map to these categories (comma-separated)</td>
+        <td><code>categories=Labs,Offices</code></td>
+      </tr>
+      <tr>
+        <td><code>tags</code></td>
+        <td>Filter map to these tags (comma-separated)</td>
+        <td><code>tags=featured</code></td>
+      </tr>
+      <tr>
+        <td><code>clustering</code></td>
+        <td>Enable/disable cluster grouping (<code>1</code> = On, <code>0</code> = Off)</td>
+        <td><code>clustering=1</code></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>URL Customization Example:</h3>
+  <pre><code>https://your-server.com/embed/?map=default&amp;lat=46.2&amp;lng=6.0&amp;zoom=10&amp;categories=Labs</code></pre>
+
+</body>
+</html>
