@@ -1114,7 +1114,7 @@
               itemDiv.onclick = () => {
                 const ref = markerRefs[item.id || item.title];
                 if (ref) {
-                  // Collapse any existing spiderfied clusters first
+                  // Step 1: Collapse any currently spiderfied clusters first
                   if (enableClustering && typeof markerGroup.unspiderfy === 'function') {
                     markerGroup.unspiderfy();
                   }
@@ -1123,13 +1123,22 @@
                   const targetZoom = currentZoom < 7 ? 7 : currentZoom;
 
                   const runSpiderfyAndOpen = () => {
-                    if (enableClustering && typeof markerGroup.getVisibleParent === 'function') {
-                      const parent = markerGroup.getVisibleParent(ref.marker);
-                      if (parent && typeof parent.spiderfy === 'function') {
-                        parent.spiderfy();
+                    // Step 3: Wait a short delay (200ms) for MarkerCluster to settle
+                    setTimeout(() => {
+                      if (enableClustering && typeof markerGroup.getVisibleParent === 'function') {
+                        const parent = markerGroup.getVisibleParent(ref.marker);
+                        if (parent && typeof parent.spiderfy === 'function') {
+                          // Step 4: Wait for the spiderfy animation to complete, then open popup
+                          markerGroup.once('spiderfied', () => {
+                            ref.marker.openPopup();
+                          });
+                          parent.spiderfy();
+                          return;
+                        }
                       }
-                    }
-                    ref.marker.openPopup();
+                      // Step 5: Open the popup directly if not clustered
+                      ref.marker.openPopup();
+                    }, 200);
                   };
 
                   const currentCenter = map.getCenter();
@@ -1139,6 +1148,7 @@
                   if (isSameZoom && isSameCenter) {
                     runSpiderfyAndOpen();
                   } else {
+                    // Step 2: Change View and Zoom
                     map.once('moveend', () => {
                       runSpiderfyAndOpen();
                     });
