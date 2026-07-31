@@ -1114,31 +1114,17 @@
               itemDiv.onclick = () => {
                 const ref = markerRefs[item.id || item.title];
                 if (ref) {
-                  // Step 1: Collapse any currently spiderfied clusters first
-                  if (enableClustering && typeof markerGroup.unspiderfy === 'function') {
-                    markerGroup.unspiderfy();
-                  }
-
                   const currentZoom = map.getZoom();
                   const targetZoom = currentZoom < 7 ? 7 : currentZoom;
 
                   const runSpiderfyAndOpen = () => {
-                    // Step 3: Wait a short delay (200ms) for MarkerCluster to settle
-                    setTimeout(() => {
-                      if (enableClustering && typeof markerGroup.getVisibleParent === 'function') {
-                        const parent = markerGroup.getVisibleParent(ref.marker);
-                        if (parent && typeof parent.spiderfy === 'function') {
-                          // Step 4: Wait for the spiderfy animation to complete, then open popup
-                          markerGroup.once('spiderfied', () => {
-                            ref.marker.openPopup();
-                          });
-                          parent.spiderfy();
-                          return;
-                        }
+                    if (enableClustering && typeof markerGroup.getVisibleParent === 'function') {
+                      const parent = markerGroup.getVisibleParent(ref.marker);
+                      if (parent && typeof parent.spiderfy === 'function') {
+                        parent.spiderfy();
                       }
-                      // Step 5: Open the popup directly if not clustered
-                      ref.marker.openPopup();
-                    }, 200);
+                    }
+                    ref.marker.openPopup();
                   };
 
                   const currentCenter = map.getCenter();
@@ -1148,9 +1134,8 @@
                   if (isSameZoom && isSameCenter) {
                     runSpiderfyAndOpen();
                   } else {
-                    // Step 2: Change View and Zoom
                     map.once('moveend', () => {
-                      runSpiderfyAndOpen();
+                      setTimeout(runSpiderfyAndOpen, 150);
                     });
                     map.setView(ref.latLng, targetZoom, { animate: true });
                   }
@@ -1229,18 +1214,6 @@
         }
         map.on('moveend', notifyParent);
         map.on('zoomend', notifyParent);
-
-        // Collapse spiderfied clusters when clicking the map or closing popups
-        map.on('click', () => {
-          if (enableClustering && typeof markerGroup.unspiderfy === 'function') {
-            markerGroup.unspiderfy();
-          }
-        });
-        map.on('popupclose', () => {
-          if (enableClustering && typeof markerGroup.unspiderfy === 'function') {
-            markerGroup.unspiderfy();
-          }
-        });
 
         // Listen for view adjustments from the parent admin sliders
         window.addEventListener('message', (event) => {
