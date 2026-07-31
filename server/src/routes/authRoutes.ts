@@ -167,6 +167,13 @@ authRouter.get('/logout', async (req: Request, res: Response) => {
 // GET /auth/me — Return current session user (for admin UI)
 // ---------------------------------------------------------------------------
 authRouter.get('/me', (req: Request, res: Response) => {
+  if (!isCernSsoEnabled()) {
+    return res.json({
+      authenticated: true,
+      user: { username: 'local-admin', roles: [] },
+    });
+  }
+
   if (!req.session?.isAuthenticated) {
     return res.status(200).json({ authenticated: false });
   }
