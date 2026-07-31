@@ -1135,9 +1135,15 @@
                     runSpiderfyAndOpen();
                   } else {
                     map.once('moveend', () => {
-                      if (enableClustering && typeof markerGroup.on === 'function') {
-                        // Wait for MarkerCluster to finish its own animation at the new zoom
-                        markerGroup.once('animationend', runSpiderfyAndOpen);
+                      if (enableClustering && typeof markerGroup.getVisibleParent === 'function') {
+                        const parent = markerGroup.getVisibleParent(ref.marker);
+                        if (parent && typeof parent.spiderfy === 'function') {
+                          // Marker is inside a cluster — wait for cluster animation to end
+                          markerGroup.once('animationend', runSpiderfyAndOpen);
+                        } else {
+                          // Marker is already visible as a standalone — open immediately
+                          runSpiderfyAndOpen();
+                        }
                       } else {
                         runSpiderfyAndOpen();
                       }
