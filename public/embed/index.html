@@ -1116,39 +1116,36 @@
                 if (ref) {
                   const currentZoom = map.getZoom();
                   const targetZoom = currentZoom < 7 ? 7 : currentZoom;
+                  const currentCenter = map.getCenter();
+                  const needsMove = currentZoom !== targetZoom || currentCenter.distanceTo(ref.latLng) >= 1;
 
-                  const runSpiderfyAndOpen = () => {
-                    if (enableClustering && typeof markerGroup.getVisibleParent === 'function') {
-                      const parent = markerGroup.getVisibleParent(ref.marker);
-                      if (parent && typeof parent.spiderfy === 'function') {
-                        parent.spiderfy();
-                      }
+                  /**
+                   * Final step: marker is now visible. Check if it is clustered and
+                   * needs spiderfying, or if it is standalone and can be opened directly.
+                   */
+                  const openWhenReady = () => {
+                    if (!enableClustering || typeof markerGroup.getVisibleParent !== 'function') {
+                      ref.marker.openPopup();
+                      return;
                     }
-                    ref.marker.openPopup();
+                    const parent = markerGroup.getVisibleParent(ref.marker);
+                    if (parent && typeof parent.spiderfy === 'function') {
+                      // Still in a cluster — spiderfy it, then open popup after animation
+                      markerGroup.once('animationend', () => ref.marker.openPopup());
+                      parent.spiderfy();
+                    } else {
+                      // Standalone marker — open popup immediately
+                      ref.marker.openPopup();
+                    }
                   };
 
-                  const currentCenter = map.getCenter();
-                  const isSameZoom = currentZoom === targetZoom;
-                  const isSameCenter = currentCenter.distanceTo(ref.latLng) < 1;
-
-                  if (isSameZoom && isSameCenter) {
-                    runSpiderfyAndOpen();
-                  } else {
-                    map.once('moveend', () => {
-                      if (enableClustering && typeof markerGroup.getVisibleParent === 'function') {
-                        const parent = markerGroup.getVisibleParent(ref.marker);
-                        if (parent && typeof parent.spiderfy === 'function') {
-                          // Marker is inside a cluster — wait for cluster animation to end
-                          markerGroup.once('animationend', runSpiderfyAndOpen);
-                        } else {
-                          // Marker is already visible as a standalone — open immediately
-                          runSpiderfyAndOpen();
-                        }
-                      } else {
-                        runSpiderfyAndOpen();
-                      }
-                    });
+                  if (needsMove) {
+                    // Pan/zoom first, then resolve
+                    map.once('moveend', openWhenReady);
                     map.setView(ref.latLng, targetZoom, { animate: true });
+                  } else {
+                    // Already in position — resolve immediately
+                    openWhenReady();
                   }
 
                   if (window.innerWidth <= 768) {
