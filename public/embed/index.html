@@ -1135,7 +1135,12 @@
                     runSpiderfyAndOpen();
                   } else {
                     map.once('moveend', () => {
-                      setTimeout(runSpiderfyAndOpen, 150);
+                      if (enableClustering && typeof markerGroup.on === 'function') {
+                        // Wait for MarkerCluster to finish its own animation at the new zoom
+                        markerGroup.once('animationend', runSpiderfyAndOpen);
+                      } else {
+                        runSpiderfyAndOpen();
+                      }
                     });
                     map.setView(ref.latLng, targetZoom, { animate: true });
                   }
