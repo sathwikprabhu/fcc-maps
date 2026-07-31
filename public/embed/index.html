@@ -1115,8 +1115,8 @@
                 const ref = markerRefs[item.id || item.title];
                 if (!ref) return;
 
-                const targetZoom = Math.max(map.getZoom(), 7);
-                const zoomChanges = map.getZoom() < 7;
+                const targetZoom = 7;
+                const zoomChanges = map.getZoom() !== 7;
                 const needsMove = zoomChanges || map.getCenter().distanceTo(ref.latLng) >= 1;
 
                 // Spiderfy the parent cluster if the marker is clustered, then open popup
