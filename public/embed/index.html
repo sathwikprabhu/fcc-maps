@@ -894,7 +894,6 @@
           return;
         }
 
-        // Create marker group (clustered or standard)
         const markerGroup = enableClustering ? L.markerClusterGroup({
           showCoverageOnHover: false,
           maxClusterRadius: 50,
@@ -1115,15 +1114,35 @@
               itemDiv.onclick = () => {
                 const ref = markerRefs[item.id || item.title];
                 if (ref) {
-                  const zoomAndOpen = () => {
-                    map.setView(ref.latLng, 5, { animate: true });
-                    setTimeout(() => ref.marker.openPopup(), 200);
+                  // Collapse any existing spiderfied clusters first
+                  if (enableClustering && typeof markerGroup.unspiderfy === 'function') {
+                    markerGroup.unspiderfy();
+                  }
+
+                  const currentZoom = map.getZoom();
+                  const targetZoom = currentZoom < 7 ? 7 : currentZoom;
+
+                  const runSpiderfyAndOpen = () => {
+                    if (enableClustering && typeof markerGroup.getVisibleParent === 'function') {
+                      const parent = markerGroup.getVisibleParent(ref.marker);
+                      if (parent && typeof parent.spiderfy === 'function') {
+                        parent.spiderfy();
+                      }
+                    }
+                    ref.marker.openPopup();
                   };
 
-                  if (enableClustering && typeof markerGroup.zoomToShowLayer === 'function') {
-                    markerGroup.zoomToShowLayer(ref.marker, zoomAndOpen);
+                  const currentCenter = map.getCenter();
+                  const isSameZoom = currentZoom === targetZoom;
+                  const isSameCenter = currentCenter.distanceTo(ref.latLng) < 1;
+
+                  if (isSameZoom && isSameCenter) {
+                    runSpiderfyAndOpen();
                   } else {
-                    zoomAndOpen();
+                    map.once('moveend', () => {
+                      runSpiderfyAndOpen();
+                    });
+                    map.setView(ref.latLng, targetZoom, { animate: true });
                   }
 
                   if (window.innerWidth <= 768) {
@@ -1200,6 +1219,18 @@
         }
         map.on('moveend', notifyParent);
         map.on('zoomend', notifyParent);
+
+        // Collapse spiderfied clusters when clicking the map or closing popups
+        map.on('click', () => {
+          if (enableClustering && typeof markerGroup.unspiderfy === 'function') {
+            markerGroup.unspiderfy();
+          }
+        });
+        map.on('popupclose', () => {
+          if (enableClustering && typeof markerGroup.unspiderfy === 'function') {
+            markerGroup.unspiderfy();
+          }
+        });
 
         // Listen for view adjustments from the parent admin sliders
         window.addEventListener('message', (event) => {
