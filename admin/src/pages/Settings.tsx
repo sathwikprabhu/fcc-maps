@@ -10,15 +10,11 @@ import { toast } from 'sonner';
 import { Copy, Loader2, Key } from 'lucide-react';
 import type { Settings } from '../types';
 
-const PRESETS = [
-  { name: 'CartoDB Voyager (Default)', url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png' },
-  { name: 'CartoDB Positron (Light Minimal)', url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png' },
-  { name: 'CartoDB Dark Matter (Dark Mode)', url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png' },
-  { name: 'OpenStreetMap Standard (Detailed)', url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png' },
-  { name: 'Esri World Imagery (Satellite)', url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}' },
-  { name: 'Esri World Street Map (Detailed Roads)', url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}' },
-  { name: 'OpenTopoMap (Topographical)', url: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png' },
-  { name: 'MapTiler Landscape (Requires API Key)', url: 'https://api.maptiler.com/maps/landscape/{z}/{x}/{y}.png?key={apiKey}' },
+const MAP_STYLES = [
+  { name: 'Liberty', value: 'liberty' },
+  { name: 'Bright', value: 'bright' },
+  { name: 'Positron', value: 'positron' },
+  { name: 'Dark', value: 'dark' },
 ];
 
 export default function SettingsPage() {
@@ -27,7 +23,6 @@ export default function SettingsPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [testingConnection, setTestingConnection] = useState(false);
   const [showCredentialFields, setShowCredentialFields] = useState(false);
-  const [selectedPresetName, setSelectedPresetName] = useState<string>('CartoDB Voyager (Default)');
 
   const mapId = 'default';
 
@@ -37,16 +32,6 @@ export default function SettingsPage() {
 
   useEffect(() => {
     setFormSettings({ ...settings });
-    
-    // Sync dropdown selection with loaded baseMapUrl
-    const match = PRESETS.find(p => p.url === settings.baseMapUrl);
-    if (match) {
-      setSelectedPresetName(match.name);
-    } else if (settings.baseMapUrl) {
-      setSelectedPresetName('custom');
-    } else {
-      setSelectedPresetName('CartoDB Voyager (Default)');
-    }
   }, [settings]);
 
   const handleSaveSettings = async () => {
@@ -96,9 +81,9 @@ export default function SettingsPage() {
   const cronUrl = `${window.location.origin}/api/maps/default/sync`;
 
   const getPreviewUrl = () => {
-    let url = formSettings.baseMapUrl || 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
-    url = url.replace('{apiKey}', formSettings.mapTilerApiKey || '');
-    return `${window.location.origin}/embed/?map=default&preview=1&baseMapUrl=${encodeURIComponent(url)}`;
+    const style = formSettings.baseMapStyle || 'liberty';
+    const borders = formSettings.enableBorders !== false ? '1' : '0';
+    return `${window.location.origin}/embed/?map=default&preview=1&baseMapStyle=${encodeURIComponent(style)}&enableBorders=${borders}`;
   };
 
   return (
@@ -285,67 +270,46 @@ export default function SettingsPage() {
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-3">
-              <Label htmlFor="baseMapPreset">Base Map Style Preset</Label>
+              <Label htmlFor="baseMapStyle">Map Style</Label>
               <select
-                id="baseMapPreset"
-                value={selectedPresetName}
+                id="baseMapStyle"
+                value={formSettings.baseMapStyle || 'liberty'}
                 onChange={(e) => {
-                  const val = e.target.value;
-                  setSelectedPresetName(val);
-                  if (val !== 'custom') {
-                    const preset = PRESETS.find(p => p.name === val);
-                    if (preset) {
-                      setFormSettings(prev => ({ ...prev, baseMapUrl: preset.url }));
-                    }
-                  }
+                  setFormSettings(prev => ({ ...prev, baseMapStyle: e.target.value }));
                 }}
                 className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
               >
-                {PRESETS.map(preset => (
-                  <option key={preset.name} value={preset.name}>{preset.name}</option>
+                {MAP_STYLES.map(style => (
+                  <option key={style.value} value={style.value}>{style.name}</option>
                 ))}
-                <option value="custom">Custom Tile URL</option>
               </select>
+              <p className="text-sm text-muted-foreground">
+                Choose the visual style for the map background. Tiles are served from OpenFreeMap.
+              </p>
             </div>
 
-            {selectedPresetName === 'custom' && (
-              <div className="space-y-3">
-                <Label htmlFor="baseMapUrl">Custom Tile URL</Label>
-                <Input
-                  id="baseMapUrl"
-                  type="url"
-                  placeholder="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                  value={formSettings.baseMapUrl || ''}
-                  onChange={(e) => setFormSettings(prev => ({ ...prev, baseMapUrl: e.target.value }))}
-                />
-                <p className="text-xs text-muted-foreground">
-                  Enter a standard Leaflet tile template URL containing <code>{`{s}`}</code>, <code>{`{z}`}</code>, <code>{`{x}`}</code>, and <code>{`{y}`}</code>. Use <code>{`{apiKey}`}</code> for the key placeholder.
+            <div className="flex items-center justify-between border rounded-md p-4">
+              <div className="space-y-0.5">
+                <Label className="text-base">Show Country Borders</Label>
+                <p className="text-sm text-muted-foreground">
+                  Display country and administrative boundary lines on the map.
                 </p>
               </div>
-            )}
-
-            {(selectedPresetName === 'MapTiler Landscape (Requires API Key)' || selectedPresetName === 'custom') && (
-              <div className="space-y-3">
-                <Label htmlFor="mapTilerApiKey">API Key</Label>
-                <Input
-                  id="mapTilerApiKey"
-                  type="text"
-                  placeholder="Enter your API key"
-                  value={formSettings.mapTilerApiKey || ''}
-                  onChange={(e) => setFormSettings(prev => ({ ...prev, mapTilerApiKey: e.target.value }))}
-                />
-              </div>
-            )}
+              <Switch
+                checked={formSettings.enableBorders !== false}
+                onCheckedChange={(checked) => setFormSettings(prev => ({ ...prev, enableBorders: checked }))}
+              />
+            </div>
 
             {/* Live Preview of selected base map style */}
             <div className="pt-4 border-t space-y-3">
               <Label className="block text-sm font-medium">Base Map Style Preview</Label>
-              <div className="h-60 rounded-md border overflow-hidden bg-muted">
+              <div className="h-[420px] rounded-md border overflow-hidden bg-muted">
                 <iframe
                   src={getPreviewUrl()}
                   className="w-full h-full border-0 animate-in fade-in-0 duration-200"
                   title="Base Map Preview"
-                  key={`${formSettings.baseMapUrl}-${formSettings.mapTilerApiKey}`}
+                  key={`${formSettings.baseMapStyle}-${formSettings.enableBorders}`}
                 />
               </div>
             </div>
@@ -362,3 +326,4 @@ export default function SettingsPage() {
     </div>
   );
 }
+

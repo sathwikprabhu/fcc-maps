@@ -9,6 +9,9 @@
   <!-- Leaflet CSS -->
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css" />
 
+  <!-- MapLibre GL CSS -->
+  <link rel="stylesheet" href="vendor/maplibre-gl/maplibre-gl.css" />
+
   <!-- MarkerCluster CSS -->
   <link rel="stylesheet" href="vendor/leaflet-markercluster/MarkerCluster.css" />
   <link rel="stylesheet" href="vendor/leaflet-markercluster/MarkerCluster.Default.css" />
@@ -579,10 +582,13 @@
     }
 
     .empty-state {
-      padding: 32px 16px;
-      text-align: center;
-      color: #71717a;
       font-size: 0.875rem;
+    }
+
+    body.is-preview #sidebar,
+    body.is-preview #sidebar-toggle,
+    body.is-preview #map-header {
+      display: none !important;
     }
   </style>
 </head>
@@ -660,6 +666,12 @@
   <!-- Leaflet JS -->
   <script src="vendor/leaflet/leaflet.js"></script>
 
+  <!-- MapLibre GL JS -->
+  <script src="vendor/maplibre-gl/maplibre-gl.js"></script>
+
+  <!-- Leaflet-MapLibre GL Bridge -->
+  <script src="vendor/maplibre-gl-leaflet/leaflet-maplibre-gl.js"></script>
+
   <!-- MarkerCluster JS -->
   <script src="vendor/leaflet-markercluster/leaflet.markercluster.js"></script>
 
@@ -674,7 +686,9 @@
       const paramLng = urlParams.get('lng');
       const paramZoom = urlParams.get('zoom');
       const isPreview = urlParams.get('preview') === '1';
-      const paramBaseMapUrl = urlParams.get('baseMapUrl');
+      if (isPreview) {
+        document.body.classList.add('is-preview');
+      }
 
       // Update export CSV button URL
       const exportCsvBtn = document.getElementById('export-csv-btn');
@@ -686,7 +700,8 @@
       let defaultLng = 6;
       let defaultZoom = 3;
       let enableClustering = true;
-      let baseMapUrl = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
+      let baseMapStyle = 'liberty';
+      let enableBorders = true;
       let filterTags = [];
       let filterCategories = [];
       let mapName = '';
@@ -711,11 +726,11 @@
           if (paramClustering !== null) {
             enableClustering = paramClustering === '1';
           }
-          if (settings.baseMapUrl) {
-            baseMapUrl = settings.baseMapUrl.replace('{apiKey}', settings.mapTilerApiKey || '');
+          if (settings.baseMapStyle) {
+            baseMapStyle = settings.baseMapStyle;
           }
-          if (paramBaseMapUrl) {
-            baseMapUrl = paramBaseMapUrl.replace('{apiKey}', settings.mapTilerApiKey || '');
+          if (settings.enableBorders !== undefined) {
+            enableBorders = settings.enableBorders;
           }
           if (settings.filterTags) {
             filterTags = settings.filterTags.map(t => t.trim().toLowerCase());
@@ -736,6 +751,12 @@
           }
 
           // URL parameters override settings
+          if (urlParams.get('baseMapStyle')) {
+            baseMapStyle = urlParams.get('baseMapStyle');
+          }
+          if (urlParams.get('enableBorders') !== null) {
+            enableBorders = urlParams.get('enableBorders') === '1' || urlParams.get('enableBorders') === 'true';
+          }
           if (urlParams.get('tags')) {
             filterTags = urlParams.get('tags').split(',').map(t => t.trim().toLowerCase()).filter(Boolean);
           }
@@ -830,7 +851,8 @@
       const map = L.map('map', {
         zoomControl: false,
         attributionControl: false, // Custom attribution control added below to ensure Leaflet link opens in new tab
-        minZoom: 3
+        minZoom: 3,
+        maxZoom: 12
       }).setView([initialLat, initialLng], initialZoom);
 
       L.control.attribution({
@@ -842,21 +864,87 @@
         position: 'bottomright'
       }).addTo(map);
 
-      // Add modern styled tile layer
-      let attribution = '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors';
-      if (baseMapUrl.includes('cartocdn.com') || baseMapUrl.includes('carto.com')) {
-        attribution = '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions" target="_blank" rel="noopener noreferrer">CARTO</a>';
-      } else if (baseMapUrl.includes('maptiler.com')) {
-        attribution = '&copy; <a href="https://www.maptiler.com/copyright/" target="_blank" rel="noopener noreferrer">MapTiler</a> &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap contributors</a>';
-      } else if (baseMapUrl.includes('arcgisonline.com') || baseMapUrl.includes('esri')) {
-        attribution = 'Esri, HERE, Garmin, &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors';
+      // Map style URL from OpenFreeMap
+      const styleUrl = `https://tiles.openfreemap.org/styles/${baseMapStyle}`;
+
+      // Add MapLibre GL vector tile layer via bridge
+      const glLayer = L.maplibreGL({
+        style: styleUrl,
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors &copy; <a href="https://openfreemap.org" target="_blank" rel="noopener noreferrer">OpenFreeMap</a>',
+      }).addTo(map);
+
+      // Wait for the MapLibre GL map to be ready, then apply border/sea-color logic
+      function onGlMapReady() {
+        const glMap = glLayer.getMaplibreMap();
+        if (!glMap) return;
+
+        function updateSeaColor() {
+          const style = glMap.getStyle();
+          if (!style || !style.layers) return;
+
+          if (baseMapStyle !== 'liberty') return;
+
+          const selectedColor = '#a5c8e9';
+          style.layers.forEach(layer => {
+            const id = (layer.id || '').toLowerCase();
+            const sourceLayer = (layer['source-layer'] || '').toLowerCase();
+
+            const isWater = id.includes('water') || id.includes('ocean') || id.includes('sea') ||
+              sourceLayer.includes('water') || sourceLayer.includes('ocean') || sourceLayer.includes('sea');
+
+            if (isWater && glMap.getLayer(layer.id)) {
+              if (layer.type === 'fill') {
+                glMap.setPaintProperty(layer.id, 'fill-color', selectedColor);
+              } else if (layer.type === 'background') {
+                glMap.setPaintProperty(layer.id, 'background-color', selectedColor);
+              }
+            }
+          });
+        }
+
+        function purgeBorderLayers() {
+          const style = glMap.getStyle();
+          if (!style || !style.layers) return;
+
+          if (!enableBorders) {
+            style.layers.forEach(layer => {
+              const id = (layer.id || '').toLowerCase();
+              const sourceLayer = (layer['source-layer'] || '').toLowerCase();
+
+              if (
+                id.includes('boundary') ||
+                id.includes('admin') ||
+                id.includes('border') ||
+                sourceLayer.includes('boundary') ||
+                sourceLayer.includes('admin')
+              ) {
+                if (glMap.getLayer(layer.id)) {
+                  glMap.removeLayer(layer.id);
+                }
+              }
+            });
+          }
+
+          updateSeaColor();
+        }
+
+        glMap.on('style.load', purgeBorderLayers);
+        glMap.on('styledata', purgeBorderLayers);
+        glMap.on('load', purgeBorderLayers);
+
+        // Run immediately if style is already loaded
+        purgeBorderLayers();
       }
 
-      L.tileLayer(baseMapUrl, {
-        attribution: attribution,
-        subdomains: 'abcd',
-        maxZoom: 20
-      }).addTo(map);
+      // The MapLibre GL map may not be available immediately; poll briefly
+      let glPollAttempts = 0;
+      const glPollInterval = setInterval(() => {
+        glPollAttempts++;
+        if (glLayer.getMaplibreMap() || glPollAttempts > 50) {
+          clearInterval(glPollInterval);
+          if (glLayer.getMaplibreMap()) onGlMapReady();
+        }
+      }, 100);
 
       // Load markers.json
       if (isPreview) {

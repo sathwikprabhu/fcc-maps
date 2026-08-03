@@ -31,6 +31,8 @@ const DEFAULT_SETTINGS: Settings = {
   description: '',
   faviconUrl: '',
   baseMapUrl: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+  baseMapStyle: 'liberty',
+  enableBorders: true,
   filterTags: [],
   filterCategories: [],
 };

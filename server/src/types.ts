@@ -27,6 +27,8 @@ export interface Settings {
   description?: string;
   faviconUrl?: string;
   baseMapUrl?: string;
+  baseMapStyle?: string;
+  enableBorders?: boolean;
   filterTags?: string[];
   filterCategories?: string[];
   hasCredentials?: boolean;

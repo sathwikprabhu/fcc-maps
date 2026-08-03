@@ -97,6 +97,8 @@ router.get(['/settings', '/maps/:mapId/settings'], looseLimiter, (req: Request, 
     if (mapId !== 'default') {
       const defaultSettings = storage.getSettings('default');
       settings.baseMapUrl = defaultSettings.baseMapUrl;
+      settings.baseMapStyle = defaultSettings.baseMapStyle;
+      settings.enableBorders = defaultSettings.enableBorders;
       settings.mapTilerApiKey = defaultSettings.mapTilerApiKey;
     }
 
@@ -135,6 +137,8 @@ router.put(['/settings', '/maps/:mapId/settings'], standardLimiter, (req: Reques
       description: typeof body.description === 'string' ? body.description.trim() : '',
       faviconUrl: typeof body.faviconUrl === 'string' ? body.faviconUrl.trim() : '',
       baseMapUrl: typeof body.baseMapUrl === 'string' ? body.baseMapUrl.trim() : '',
+      baseMapStyle: typeof body.baseMapStyle === 'string' ? body.baseMapStyle.trim() : 'liberty',
+      enableBorders: typeof body.enableBorders === 'boolean' ? body.enableBorders : true,
       filterTags: Array.isArray(body.filterTags) ? body.filterTags.filter((t: unknown) => typeof t === 'string') : [],
       filterCategories: Array.isArray(body.filterCategories) ? body.filterCategories.filter((c: unknown) => typeof c === 'string') : [],
       mapTilerApiKey: typeof body.mapTilerApiKey === 'string' ? body.mapTilerApiKey.trim() : '',
