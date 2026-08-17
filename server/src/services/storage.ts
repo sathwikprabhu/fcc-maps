@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { Settings, SyncStatus, LogEntry, Marker } from '../types';
+import { decodeHtmlEntities, cleanMarkerList } from '../utils/textUtils';
 
 // Private config — never under a publicly served directory
 const CONFIG_DIR = path.join(__dirname, '../../storage/config');
@@ -71,6 +72,35 @@ function getMapPaths(mapId: string) {
   };
 }
 
+function sanitizeExistingStoredMarkers() {
+  try {
+    const mapsStorageDir = path.join(STORAGE_DIR, 'maps');
+    if (fs.existsSync(mapsStorageDir)) {
+      const mapFolders = fs.readdirSync(mapsStorageDir);
+      for (const mapFolder of mapFolders) {
+        const markersFile = path.join(mapsStorageDir, mapFolder, 'markers.json');
+        if (fs.existsSync(markersFile)) {
+          try {
+            const raw = fs.readFileSync(markersFile, 'utf-8');
+            const data = JSON.parse(raw);
+            if (Array.isArray(data)) {
+              const cleaned = cleanMarkerList(data);
+              const newRaw = JSON.stringify(cleaned, null, 2);
+              if (newRaw !== raw) {
+                fs.writeFileSync(markersFile, newRaw, 'utf-8');
+              }
+            }
+          } catch (err) {
+            console.error(`Failed to sanitize markers in ${markersFile}:`, err);
+          }
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Failed to scan and sanitize existing markers:', error);
+  }
+}
+
 function migrateExistingConfig() {
   const oldSettingsPath = path.join(CONFIG_DIR, 'settings.json');
   const oldStatusPath = path.join(CONFIG_DIR, 'status.json');
@@ -134,6 +164,9 @@ export class StorageService {
 
     // Migrate old configuration if present
     migrateExistingConfig();
+
+    // Sanitize any existing markers stored on disk
+    sanitizeExistingStoredMarkers();
 
     // Initialize maps.json if missing
     if (!fs.existsSync(MAPS_INDEX_PATH)) {
@@ -328,7 +361,8 @@ export class StorageService {
     const paths = getMapPaths(mapId);
     try {
       ensureDirExists(paths.storageDir);
-      const jsonContent = JSON.stringify(markers, null, 2);
+      const cleaned = cleanMarkerList(markers);
+      const jsonContent = JSON.stringify(cleaned, null, 2);
       fs.writeFileSync(paths.markers, jsonContent, 'utf-8');
       return Buffer.byteLength(jsonContent, 'utf-8');
     } catch (error) {
@@ -353,7 +387,20 @@ export class StorageService {
     const paths = getMapPaths(mapId);
     try {
       if (fs.existsSync(paths.colors)) {
-        return JSON.parse(fs.readFileSync(paths.colors, 'utf-8'));
+        const rawColors = JSON.parse(fs.readFileSync(paths.colors, 'utf-8'));
+        const cleanCategories: Record<string, string> = {};
+        const cleanTags: Record<string, string> = {};
+        if (rawColors.categories && typeof rawColors.categories === 'object') {
+          for (const [k, v] of Object.entries(rawColors.categories)) {
+            cleanCategories[decodeHtmlEntities(k)] = String(v);
+          }
+        }
+        if (rawColors.tags && typeof rawColors.tags === 'object') {
+          for (const [k, v] of Object.entries(rawColors.tags)) {
+            cleanTags[decodeHtmlEntities(k)] = String(v);
+          }
+        }
+        return { categories: cleanCategories, tags: cleanTags };
       }
     } catch (error) {
       this.addLog('error', 'Failed to read colors file', String(error), mapId);
@@ -365,7 +412,19 @@ export class StorageService {
     const paths = getMapPaths(mapId);
     try {
       ensureDirExists(paths.configDir);
-      fs.writeFileSync(paths.colors, JSON.stringify(colors, null, 2), 'utf-8');
+      const cleanCategories: Record<string, string> = {};
+      const cleanTags: Record<string, string> = {};
+      if (colors.categories && typeof colors.categories === 'object') {
+        for (const [k, v] of Object.entries(colors.categories)) {
+          cleanCategories[decodeHtmlEntities(k)] = String(v);
+        }
+      }
+      if (colors.tags && typeof colors.tags === 'object') {
+        for (const [k, v] of Object.entries(colors.tags)) {
+          cleanTags[decodeHtmlEntities(k)] = String(v);
+        }
+      }
+      fs.writeFileSync(paths.colors, JSON.stringify({ categories: cleanCategories, tags: cleanTags }, null, 2), 'utf-8');
     } catch (error) {
       this.addLog('error', 'Failed to save colors file', String(error), mapId);
       throw error;
@@ -376,7 +435,8 @@ export class StorageService {
     const paths = getMapPaths(mapId);
     try {
       if (fs.existsSync(paths.markers)) {
-        return JSON.parse(fs.readFileSync(paths.markers, 'utf-8'));
+        const data = JSON.parse(fs.readFileSync(paths.markers, 'utf-8'));
+        return cleanMarkerList(data);
       }
     } catch (error) {
       // silent

@@ -2,6 +2,7 @@ import crypto from 'crypto';
 import https from 'https';
 import { storage } from '../services/storage';
 import { Marker, Settings, SyncStatus, SyncStats } from '../types';
+import { decodeHtmlEntities } from '../utils/textUtils';
 
 export class SchedulerService {
   private timers: Map<string, NodeJS.Timeout> = new Map();
@@ -187,7 +188,8 @@ export class SchedulerService {
       const coordSet = new Set<string>();
 
       for (const post of allPosts) {
-        if (!post.id || !post.title?.rendered) {
+        const cleanTitle = decodeHtmlEntities(post.title?.rendered);
+        if (!post.id || !cleanTitle) {
           invalidPostsCount++;
           continue;
         }
@@ -201,12 +203,12 @@ export class SchedulerService {
           const termsList: any[][] = post._embedded['wp:term'];
           for (const terms of termsList) {
             for (const term of terms) {
-              if (term.taxonomy === 'category') {
-                category = term.name;
-              } else if (term.taxonomy === 'post_tag') {
-                tags.push(term.name);
-              } else if (term.taxonomy === 'country') {
-                country = term.name;
+              if (term.taxonomy === 'category' && term.name) {
+                category = decodeHtmlEntities(term.name);
+              } else if (term.taxonomy === 'post_tag' && term.name) {
+                tags.push(decodeHtmlEntities(term.name));
+              } else if (term.taxonomy === 'country' && term.name) {
+                country = decodeHtmlEntities(term.name);
               }
             }
           }
@@ -239,18 +241,18 @@ export class SchedulerService {
               if (coordSet.has(coordKey)) {
                 duplicateCoordinatesCount++;
                 if (!settings.enableClustering) {
-                  storage.addLog('warn', `Validation Skip: Duplicate coordinates for Post ID ${post.id} ("${post.title.rendered}")`, `Coords: ${lat}, ${lng}`, mapId);
+                  storage.addLog('warn', `Validation Skip: Duplicate coordinates for Post ID ${post.id} ("${cleanTitle}")`, `Coords: ${lat}, ${lng}`, mapId);
                   hasCoordinates = false;
                 }
               }
               if (hasCoordinates) coordSet.add(coordKey);
             } else {
               invalidPostsCount++;
-              storage.addLog('warn', `Post ID ${post.id} ("${post.title.rendered}") coordinates out of bounds.`, `Coords: ${parsedLat}, ${parsedLng}`, mapId);
+              storage.addLog('warn', `Post ID ${post.id} ("${cleanTitle}") coordinates out of bounds.`, `Coords: ${parsedLat}, ${parsedLng}`, mapId);
             }
           } else {
             invalidPostsCount++;
-            storage.addLog('warn', `Post ID ${post.id} ("${post.title.rendered}") has no coordinates — included in export only.`, undefined, mapId);
+            storage.addLog('warn', `Post ID ${post.id} ("${cleanTitle}") has no coordinates — included in export only.`, undefined, mapId);
           }
         } else {
           invalidPostsCount++;
@@ -258,7 +260,7 @@ export class SchedulerService {
 
         markers.push({
           id: post.id,
-          title: post.title.rendered,
+          title: cleanTitle,
           latitude: lat,
           longitude: lng,
           hasCoordinates,

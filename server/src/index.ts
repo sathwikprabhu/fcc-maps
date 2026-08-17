@@ -165,34 +165,26 @@ app.get('/admin/*', requireAuth, (req: Request, res: Response) => {
 const storagePath = path.join(__dirname, '../storage');
 
 app.get('/markers.json', (_req: Request, res: Response) => {
-  const markersFile = path.join(storagePath, 'maps/default/markers.json');
-  if (!fs.existsSync(markersFile)) {
-    return res.json([]);
+  try {
+    const markers = storage.getParsedMarkers('default');
+    res.json(markers);
+  } catch (error) {
+    console.error('Error serving markers:', error);
+    res.status(500).json({ error: 'Failed to retrieve markers' });
   }
-  res.sendFile(markersFile);
 });
 
 app.get('/maps/:mapId/markers.json', (req: Request, res: Response) => {
   const mapId = req.params.mapId.replace(/[^a-zA-Z0-9\-_]/g, '');
-  const defaultMarkersFile = path.join(storagePath, 'maps/default/markers.json');
-  if (!fs.existsSync(defaultMarkersFile)) {
-    return res.json([]);
-  }
 
   try {
-    const rawData = fs.readFileSync(defaultMarkersFile, 'utf-8');
-    const markers = JSON.parse(rawData);
+    const markers = storage.getParsedMarkers('default');
 
     if (mapId === 'default') {
       return res.json(markers);
     }
 
-    const settingsFile = path.join(storagePath, 'config/maps', mapId, 'settings.json');
-    if (!fs.existsSync(settingsFile)) {
-      return res.json(markers);
-    }
-
-    const settings = JSON.parse(fs.readFileSync(settingsFile, 'utf-8'));
+    const settings = storage.getSettings(mapId);
     const filterTags = Array.isArray(settings.filterTags) ? settings.filterTags : [];
     const filterCategories = Array.isArray(settings.filterCategories) ? settings.filterCategories : [];
 

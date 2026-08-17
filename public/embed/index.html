@@ -827,10 +827,37 @@
       const initialZoom = paramZoom ? parseInt(paramZoom, 10) : defaultZoom;
       const hasParamCoordinates = (paramLat !== null && paramLng !== null);
 
+      // Decode HTML entities, unicode character references, and escape sequences
+      function decodeHtmlEntities(str) {
+        if (!str) return '';
+        let decoded = String(str);
+        for (let i = 0; i < 3; i++) {
+          const prev = decoded;
+          decoded = decoded.replace(/&#[xX]([0-9a-fA-F]+);?/g, (_, hex) => {
+            try { return String.fromCodePoint(parseInt(hex, 16)); } catch { return _; }
+          });
+          decoded = decoded.replace(/&#([0-9]+);?/g, (_, dec) => {
+            try { return String.fromCodePoint(parseInt(dec, 10)); } catch { return _; }
+          });
+          decoded = decoded.replace(/\\u([0-9a-fA-F]{4})/gi, (_, hex) => {
+            try { return String.fromCharCode(parseInt(hex, 16)); } catch { return _; }
+          });
+          try {
+            const doc = new DOMParser().parseFromString(decoded, 'text/html');
+            if (doc && doc.body && doc.body.textContent !== null) {
+              decoded = doc.body.textContent;
+            }
+          } catch (_) {}
+          if (decoded === prev) break;
+        }
+        return decoded;
+      }
+
       // Security: escape HTML special chars to prevent XSS from marker data
       function escapeHtml(str) {
         if (!str) return '';
-        return String(str)
+        const clean = decodeHtmlEntities(str);
+        return String(clean)
           .replace(/&/g, '&amp;')
           .replace(/</g, '&lt;')
           .replace(/>/g, '&gt;')
@@ -959,7 +986,14 @@
           throw new Error(`Failed to fetch markers for map ${mapId}`);
         }
 
-        const markersData = await markersRes.json();
+        const rawMarkersData = await markersRes.json();
+        const markersData = (Array.isArray(rawMarkersData) ? rawMarkersData : []).map(item => ({
+          ...item,
+          title: decodeHtmlEntities(item.title),
+          category: decodeHtmlEntities(item.category),
+          country: decodeHtmlEntities(item.country),
+          tags: Array.isArray(item.tags) ? item.tags.map(decodeHtmlEntities) : item.tags,
+        }));
 
         // Apply tags & categories configuration filters
         const activeMarkersData = markersData.filter(item => {
