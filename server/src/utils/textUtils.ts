@@ -230,6 +230,7 @@ export function cleanMarker(marker: Marker): Marker {
     title: decodeHtmlEntities(marker.title),
     category: marker.category ? decodeHtmlEntities(marker.category) : marker.category,
     country: marker.country ? decodeHtmlEntities(marker.country) : marker.country,
+    location: marker.location ? decodeHtmlEntities(marker.location) : marker.location,
     tags: Array.isArray(marker.tags) ? marker.tags.map(t => decodeHtmlEntities(t)) : marker.tags,
   };
 }

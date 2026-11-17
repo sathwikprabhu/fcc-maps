@@ -474,17 +474,35 @@ router.get(['/export-csv', '/maps/:mapId/export-csv'], looseLimiter, (req: Reque
       return `"${str}"`;
     };
 
-    const headers = ['ID', 'Title', 'Category', 'Tags', 'Latitude', 'Longitude', 'Has Coordinates', 'URL', 'Image URL'];
+    const headers = [
+      'ID',
+      'Title',
+      'Location',
+      'Country',
+      'Category',
+      'Tags',
+      'Latitude',
+      'Longitude',
+      'Has Coordinates',
+      'URL',
+      'WordPress Post URL',
+      'Grey Book URL',
+      'Image URL',
+    ];
 
     const rows = markers.map(m => [
       csvCell(m.id),
       csvCell(m.title),
+      csvCell(m.location || ''),
+      csvCell(m.country && m.country !== 'Unknown' ? m.country : (m.category || '')),
       csvCell(m.category || ''),
       csvCell(Array.isArray(m.tags) ? m.tags.join('; ') : ''),
       csvCell(m.latitude !== null ? m.latitude : ''),
       csvCell(m.longitude !== null ? m.longitude : ''),
       csvCell(m.hasCoordinates ? 'Yes' : 'No'),
       csvCell(m.url || ''),
+      csvCell(m.postUrl || ''),
+      csvCell(m.greyBookUrl || ''),
       csvCell(m.imageUrl || ''),
     ].join(','));
 

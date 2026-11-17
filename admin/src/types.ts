@@ -1,11 +1,15 @@
 export interface Marker {
   id: number;
   title: string;
-  latitude: number;
-  longitude: number;
+  latitude: number | null;
+  longitude: number | null;
+  hasCoordinates?: boolean;
   url: string;
+  postUrl?: string;
   category?: string;
   country?: string;
+  location?: string;
+  greyBookUrl?: string;
   tags?: string[];
   imageUrl?: string;
 }

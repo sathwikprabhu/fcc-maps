@@ -124,6 +124,13 @@ export class SchedulerService {
     return null;
   }
 
+  private parseGreyBookUrl(content?: string, excerpt?: string): string {
+    const text = `${content || ''} ${excerpt || ''}`;
+    const match = text.match(/https?:\/\/greybook\.cern\.ch\/[^\s"'<>\)]+/i);
+    if (!match) return '';
+    return match[0].replace(/[.,;:]+$/, '').trim();
+  }
+
   public async sync(mapId: string = 'default', manual = false): Promise<void> {
     if (this.syncingStatus.get(mapId)) {
       storage.addLog('warn', 'Sync already in progress, skipping execution', undefined, mapId);
@@ -196,6 +203,7 @@ export class SchedulerService {
 
         let category = 'Uncategorized';
         let country = 'Unknown';
+        let location = '';
         const tags: string[] = [];
         let imageUrl = '';
 
@@ -209,20 +217,29 @@ export class SchedulerService {
                 tags.push(decodeHtmlEntities(term.name));
               } else if (term.taxonomy === 'country' && term.name) {
                 country = decodeHtmlEntities(term.name);
+              } else if (term.taxonomy === 'authors' && term.name) {
+                location = decodeHtmlEntities(term.name);
               }
             }
           }
+        }
+
+        if (country === 'Unknown' && category && category !== 'Uncategorized') {
+          country = category;
         }
 
         if (post._embedded && post._embedded['wp:featuredmedia'] && post._embedded['wp:featuredmedia'][0]) {
           imageUrl = post._embedded['wp:featuredmedia'][0].source_url || '';
         }
 
-        let url = post.link || '';
+        const postUrl = post.link || '';
+        let url = postUrl;
         if (post.content && post.content.rendered) {
           const extractedUrl = this.parseWebsiteUrl(post.content.rendered);
           if (extractedUrl) url = extractedUrl;
         }
+
+        const greyBookUrl = this.parseGreyBookUrl(post.content?.rendered, post.excerpt?.rendered);
 
         let lat: number | null = null;
         let lng: number | null = null;
@@ -265,8 +282,11 @@ export class SchedulerService {
           longitude: lng,
           hasCoordinates,
           url,
+          postUrl,
           category,
           country,
+          location,
+          greyBookUrl,
           tags,
           imageUrl,
         });

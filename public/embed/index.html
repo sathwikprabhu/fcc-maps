@@ -169,6 +169,22 @@
       letter-spacing: -0.015em;
     }
 
+    .popup-location {
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: #71717a;
+      margin-top: -6px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .popup-location svg {
+      width: 14px;
+      height: 14px;
+      flex-shrink: 0;
+    }
+
     .popup-meta {
       display: flex;
       flex-wrap: wrap;
@@ -284,17 +300,45 @@
     }
 
     #sidebar-footer {
+      display: flex;
+      align-items: center;
+      gap: 8px;
       padding: 12px 16px;
       border-top: 1px solid #e4e4e7;
     }
 
+    #edit-map-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      min-width: 32px;
+      flex-shrink: 0;
+      color: #71717a;
+      background: transparent;
+      border: 1px solid #e4e4e7;
+      border-radius: 6px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background-color 0.15s, color 0.15s, border-color 0.15s;
+      box-sizing: border-box;
+    }
+
+    #edit-map-btn:hover {
+      background: #f4f4f5;
+      color: #18181b;
+      border-color: #d4d4d8;
+    }
+
     #export-csv-btn {
-      display: flex;
+      flex: 1;
+      display: inline-flex;
       align-items: center;
       justify-content: center;
       gap: 6px;
-      max-width: 100%;
-      padding: 7px 12px;
+      height: 32px;
+      padding: 0 12px;
       font-size: 0.8125rem;
       font-weight: 500;
       color: #71717a;
@@ -305,6 +349,8 @@
       text-decoration: none;
       transition: background-color 0.15s, color 0.15s, border-color 0.15s;
       letter-spacing: 0.01em;
+      box-sizing: border-box;
+      white-space: nowrap;
     }
 
     #export-csv-btn:hover {
@@ -450,17 +496,6 @@
       color: #71717a;
     }
 
-    @media (max-width: 768px) {
-      #sidebar {
-        width: 280px;
-        min-width: 280px;
-      }
-
-      #sidebar.collapsed {
-        margin-left: -280px;
-      }
-    }
-
     /* Sidebar Header Search & Filter Styles */
     #sidebar-header {
       padding: 16px;
@@ -494,6 +529,30 @@
     }
 
     .toggle-all-btn:hover {
+      background-color: #f4f4f5;
+      color: #18181b;
+      border-color: #d4d4d8;
+    }
+
+    .sidebar-close-btn {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      min-width: 36px;
+      border-radius: 6px;
+      border: 1px solid #e4e4e7;
+      background-color: #ffffff;
+      color: #71717a;
+      cursor: pointer;
+      box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      outline: none;
+      transition: background-color 0.15s, color 0.15s, border-color 0.15s;
+      flex-shrink: 0;
+    }
+
+    .sidebar-close-btn:hover {
       background-color: #f4f4f5;
       color: #18181b;
       border-color: #d4d4d8;
@@ -585,9 +644,64 @@
       font-size: 0.875rem;
     }
 
+    #sidebar-backdrop {
+      display: none;
+    }
+
+    @media (max-width: 768px) {
+      #sidebar {
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        height: 100%;
+        width: 280px;
+        max-width: calc(100vw - 48px);
+        min-width: 0;
+        margin-left: 0;
+        z-index: 1050;
+        box-shadow: 2px 0 16px rgba(0, 0, 0, 0.15);
+        transform: translateX(0);
+        transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+
+      #sidebar.collapsed {
+        margin-left: 0;
+        transform: translateX(-100%);
+        pointer-events: none;
+        box-shadow: none;
+      }
+
+      #sidebar-backdrop {
+        display: block;
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.35);
+        z-index: 1040;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+      }
+
+      #sidebar-backdrop.active {
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      .sidebar-close-btn {
+        display: inline-flex;
+      }
+    }
+
     body.is-preview #sidebar,
     body.is-preview #sidebar-toggle,
-    body.is-preview #map-header {
+    body.is-preview #map-header,
+    body.is-preview #sidebar-backdrop {
       display: none !important;
     }
   </style>
@@ -601,6 +715,7 @@
   </div>
 
   <div id="app-container">
+    <div id="sidebar-backdrop" title="Close sidebar"></div>
     <div id="sidebar" class="collapsed">
       <div id="sidebar-header">
         <div class="search-row">
@@ -627,11 +742,25 @@
               <path d="m17 11-5-5-5 5" />
             </svg>
           </button>
+          <button id="sidebar-close-btn" class="sidebar-close-btn" title="Close sidebar" aria-label="Close sidebar">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
         </div>
         <div id="tag-filters" class="tag-filters"></div>
       </div>
       <div id="sidebar-content"></div>
       <div id="sidebar-footer">
+        <a id="edit-map-btn" href="/admin/maps/default/edit" target="_blank" rel="noopener noreferrer" title="Edit Map" aria-label="Edit Map">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z" />
+            <path d="m15 5 4 4" />
+          </svg>
+        </a>
         <a id="export-csv-btn" href="/api/export-csv" download>
           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -694,6 +823,12 @@
       const exportCsvBtn = document.getElementById('export-csv-btn');
       if (exportCsvBtn) {
         exportCsvBtn.href = `/api/maps/${mapId}/export-csv`;
+      }
+
+      // Update edit map button URL
+      const editMapBtn = document.getElementById('edit-map-btn');
+      if (editMapBtn) {
+        editMapBtn.href = `/admin/maps/${encodeURIComponent(mapId)}/edit`;
       }
 
       let defaultLat = 45;
@@ -992,6 +1127,7 @@
           title: decodeHtmlEntities(item.title),
           category: decodeHtmlEntities(item.category),
           country: decodeHtmlEntities(item.country),
+          location: decodeHtmlEntities(item.location),
           tags: Array.isArray(item.tags) ? item.tags.map(decodeHtmlEntities) : item.tags,
         }));
 
@@ -1028,6 +1164,30 @@
         const sidebar = document.getElementById('sidebar');
         const sidebarContent = document.getElementById('sidebar-content');
         const toggleBtn = document.getElementById('sidebar-toggle');
+        const closeBtn = document.getElementById('sidebar-close-btn');
+        const sidebarBackdrop = document.getElementById('sidebar-backdrop');
+
+        function openSidebar() {
+          sidebar.classList.remove('collapsed');
+          if (sidebarBackdrop) {
+            sidebarBackdrop.classList.add('active');
+          }
+        }
+
+        function closeSidebar() {
+          sidebar.classList.add('collapsed');
+          if (sidebarBackdrop) {
+            sidebarBackdrop.classList.remove('active');
+          }
+        }
+
+        function toggleSidebar() {
+          if (sidebar.classList.contains('collapsed')) {
+            openSidebar();
+          } else {
+            closeSidebar();
+          }
+        }
 
         // Initial state logic based on screen width
         const isMobile = window.innerWidth <= 768;
@@ -1035,8 +1195,30 @@
           sidebar.classList.remove('collapsed');
         }
 
-        toggleBtn.addEventListener('click', () => {
-          sidebar.classList.toggle('collapsed');
+        toggleBtn.addEventListener('click', toggleSidebar);
+
+        if (closeBtn) {
+          closeBtn.addEventListener('click', closeSidebar);
+        }
+
+        if (sidebarBackdrop) {
+          sidebarBackdrop.addEventListener('click', closeSidebar);
+        }
+
+        window.addEventListener('resize', () => {
+          if (window.innerWidth > 768) {
+            if (sidebarBackdrop) sidebarBackdrop.classList.remove('active');
+          } else {
+            if (!sidebar.classList.contains('collapsed') && sidebarBackdrop) {
+              sidebarBackdrop.classList.add('active');
+            }
+          }
+        });
+
+        document.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape' && !sidebar.classList.contains('collapsed')) {
+            closeSidebar();
+          }
         });
 
         // Store references to markers to open popups
@@ -1058,13 +1240,11 @@
             imageHtml = `<div class="popup-image-container" style="background-image: url('${escapeHtml(item.imageUrl)}')"></div>`;
           }
 
-          let badgeHtml = '';
-          if (item.category) {
-            const catColor = colorConfig.categories[item.category];
-            const badgeStyle = catColor ? `style="background-color: ${escapeHtml(catColor)}15; color: ${escapeHtml(catColor)}; border-color: ${escapeHtml(catColor)}30;"` : '';
-            badgeHtml += `<span class="popup-badge category" ${badgeStyle}>${escapeHtml(item.category)}</span>`;
-          }
+          const countryName = (item.country && item.country !== 'Unknown') ? item.country : (item.category || '');
+          const locationText = [item.location, countryName].filter(Boolean).join(', ');
 
+          let badgeHtml = '';
+          // Only show non-country tags in badge pills per layout design
           if (item.tags && Array.isArray(item.tags) && item.tags.length > 0) {
             item.tags.forEach(t => {
               const tagColor = colorConfig.tags[t];
@@ -1077,6 +1257,7 @@
             ${imageHtml}
             <div class="popup-body">
               <h3 class="popup-title">${escapeHtml(item.title)}</h3>
+              ${locationText ? `<div class="popup-location"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path><circle cx="12" cy="10" r="3"></circle></svg>${escapeHtml(locationText)}</div>` : ''}
               ${badgeHtml ? `<div class="popup-meta">${badgeHtml}</div>` : ''}
               <a href="${safeUrl(item.url)}" target="_blank" rel="noopener noreferrer" class="popup-link-btn">
                 Visit Website
@@ -1174,6 +1355,7 @@
           const filteredItems = activeMarkersData.filter(item => {
             const matchesSearch = !query ||
               (item.title && item.title.toLowerCase().includes(query)) ||
+              (item.location && item.location.toLowerCase().includes(query)) ||
               (item.country && item.country.toLowerCase().includes(query)) ||
               (item.category && item.category.toLowerCase().includes(query));
 
@@ -1266,7 +1448,7 @@
                   map.setView(ref.latLng, targetZoom, { animate: true });
                 }
 
-                if (window.innerWidth <= 768) sidebar.classList.add('collapsed');
+                if (window.innerWidth <= 768) closeSidebar();
               };
               itemsDiv.appendChild(itemDiv);
             });

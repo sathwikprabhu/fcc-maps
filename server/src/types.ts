@@ -5,8 +5,11 @@ export interface Marker {
   longitude: number | null;
   hasCoordinates: boolean;
   url: string;
+  postUrl?: string;
   category?: string;
   country?: string;
+  location?: string;
+  greyBookUrl?: string;
   tags?: string[];
   imageUrl?: string;
 }

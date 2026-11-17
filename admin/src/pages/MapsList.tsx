@@ -28,6 +28,7 @@ import {
   Pencil,
   Check,
   Code,
+  Eye,
 } from 'lucide-react';
 
 // ── Per-row component to isolate copy state ──────────────────────────────────
@@ -84,21 +85,29 @@ function MapTableRow({ map }: { map: { id: string; name: string; createdAt: stri
         </div>
       </TableCell>
 
-      {/* Copy Embed Code */}
+      {/* Embed Code & View */}
       <TableCell>
-        <Button variant="outline" size="sm" onClick={handleCopyEmbed}>
-          {copiedEmbed ? (
-            <>
-              <Check className="h-4 w-4 text-green-600" />
-              Embed Code
-            </>
-          ) : (
-            <>
-              <Code className="h-4 w-4" />
-              Copy Embed Code
-            </>
-          )}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={handleCopyEmbed}>
+            {copiedEmbed ? (
+              <>
+                <Check className="h-4 w-4 text-green-600" />
+                Embed Code
+              </>
+            ) : (
+              <>
+                <Code className="h-4 w-4" />
+                Embed Code
+              </>
+            )}
+          </Button>
+          <Button variant="outline" size="sm" asChild>
+            <a href={buildEmbedUrl()} target="_blank" rel="noopener noreferrer">
+              <Eye className="h-4 w-4" />
+              View
+            </a>
+          </Button>
+        </div>
       </TableCell>
 
       {/* Copy URL */}
@@ -256,7 +265,7 @@ export default function MapsList() {
                 <TableHeader>
                   <TableRow>
                     {/* Widen name column */}
-                    <TableHead className="w-[50%]">Name</TableHead>
+                    <TableHead className="w-[40%]">Name</TableHead>
                     <TableHead>Embed Code</TableHead>
                     <TableHead>URL</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
